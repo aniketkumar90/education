@@ -77,7 +77,22 @@ app.get(['/api/health', '/health'], async (req, res) => {
     }
   } catch (err) {
     dbStatus = 'error';
-    dbError = err.message ? err.message.replace(/:([^:@]+)@/, ':****@') : 'Connection failed';
+    const serverErrors = [];
+    if (err.reason && err.reason.servers) {
+      try {
+        for (const [address, serverDesc] of err.reason.servers.entries()) {
+          serverErrors.push({
+            address,
+            type: serverDesc.type,
+            error: serverDesc.error ? serverDesc.error.message : (serverDesc.reason || null),
+          });
+        }
+      } catch {}
+    }
+    dbError = {
+      message: err.message ? err.message.replace(/:([^:@]+)@/, ':****@') : 'Connection failed',
+      servers: serverErrors,
+    };
   }
 
   const isHealthy = dbStatus === 'connected';

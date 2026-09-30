@@ -1,43 +1,6 @@
 import { useState } from 'react';
 
-const INITIAL_INQUIRIES = [
-  {
-    id: 1,
-    name: 'Rajesh Khanna',
-    phone: '9833445566',
-    email: 'rajesh.k@rediffmail.com',
-    course: 'Distance MA Geography',
-    status: 'QUALIFIED',
-    date: 'Sep 11, 03:27',
-  },
-  {
-    id: 2,
-    name: 'Ananya Desai',
-    phone: '9822334455',
-    email: 'ananya.desai@outlook.com',
-    course: 'MBA - Business Administration',
-    status: 'CONTACTED',
-    date: 'Sep 11, 02:15',
-  },
-  {
-    id: 3,
-    name: 'Vikram Malhotra',
-    phone: '9811223344',
-    email: 'vikram.m@gmail.com',
-    course: 'MCA - Computer Applications',
-    status: 'CONTACTED',
-    date: 'Sep 11, 01:40',
-  },
-  {
-    id: 4,
-    name: 'Pooja Sharma',
-    phone: '9765432109',
-    email: 'pooja.sharma@gmail.com',
-    course: 'MSc - IT & Data Science',
-    status: 'PENDING',
-    date: 'Sep 10, 18:22',
-  },
-];
+const INITIAL_INQUIRIES = [];
 
 export default function AdminInquiriesTable({ onViewAll }) {
   const [inquiries, setInquiries] = useState(INITIAL_INQUIRIES);
@@ -79,25 +42,35 @@ export default function AdminInquiriesTable({ onViewAll }) {
             </tr>
           </thead>
           <tbody>
-            {inquiries.map((item) => {
-              const badge = getStatusBadge(item.status);
-              return (
-                <tr key={item.id} style={styles.tr}>
-                  <td style={styles.tdName}>{item.name}</td>
-                  <td style={styles.td}>
-                    <div style={styles.contactPhone}>{item.phone}</div>
-                    <div style={styles.contactEmail}>{item.email}</div>
-                  </td>
-                  <td style={styles.tdCourse}>{item.course}</td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.badge, background: badge.bg, color: badge.text }}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td style={styles.tdDate}>{item.date}</td>
-                </tr>
-              );
-            })}
+            {inquiries.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b' }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>📋</div>
+                  <p style={{ margin: 0, fontWeight: 600 }}>No inquiries yet</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#94a3b8' }}>New admission leads and inquiries will appear here.</p>
+                </td>
+              </tr>
+            ) : (
+              inquiries.map((item) => {
+                const badge = getStatusBadge(item.status);
+                return (
+                  <tr key={item.id} style={styles.tr}>
+                    <td style={styles.tdName}>{item.name}</td>
+                    <td style={styles.td}>
+                      <div style={styles.contactPhone}>{item.phone}</div>
+                      <div style={styles.contactEmail}>{item.email}</div>
+                    </td>
+                    <td style={styles.tdCourse}>{item.course}</td>
+                    <td style={styles.td}>
+                      <span style={{ ...styles.badge, background: badge.bg, color: badge.text }}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td style={styles.tdDate}>{item.date}</td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

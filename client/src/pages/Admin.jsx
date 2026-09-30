@@ -103,7 +103,7 @@ export default function Admin({ user, setUser }) {
     publishedBlogs: blogs.filter((b) => b.status !== 'Draft').length,
     universityCount: blogs.filter((b) => (b.category || '').toLowerCase().includes('univ')).length,
     coursesCount: blogs.filter((b) => (b.category || '').toLowerCase().includes('course')).length,
-    totalInquiries: 4,
+    totalInquiries: 0,
     userCount: 1,
   };
 

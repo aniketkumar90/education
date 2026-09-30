@@ -16,7 +16,7 @@ export default function AdminStatCards({ stats = {} }) {
     },
     {
       title: 'TOTAL LEADS / INQUIRIES',
-      value: stats.totalInquiries || 3,
+      value: safeStats.totalInquiries || 0,
       subtext: '0 uncontacted leads',
       subtextColor: '#d97706',
       icon: (
