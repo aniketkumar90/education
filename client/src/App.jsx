@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from './components/Navbar';
@@ -10,7 +10,7 @@ import Login from './pages/Login';
 import Admin from './pages/Admin';
 
 // Sub-component to manage whether Navbar/Footer should show on Admin page if desired
-function AppContent({ user, setUser }) {
+function AppContent({ user, setUser, authLoading }) {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
@@ -24,7 +24,20 @@ function AppContent({ user, setUser }) {
           <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />
           <Route path="/login" element={<Login user={user} setUser={setUser} />} />
-          <Route path="/admin" element={<Admin user={user} setUser={setUser} />} />
+          <Route
+            path="/admin"
+            element={
+              authLoading ? (
+                <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ color: '#64748b', fontSize: 14 }}>Loading...</div>
+                </div>
+              ) : user ? (
+                <Admin user={user} setUser={setUser} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
         </Routes>
       </div>
       {!isAdminRoute && <Footer />}
@@ -34,6 +47,7 @@ function AppContent({ user, setUser }) {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is logged in
@@ -45,12 +59,15 @@ export default function App() {
       .catch(() => {
         setUser(null);
         localStorage.removeItem('token');
+      })
+      .finally(() => {
+        setAuthLoading(false);
       });
   }, []);
 
   return (
     <Router>
-      <AppContent user={user} setUser={setUser} />
+      <AppContent user={user} setUser={setUser} authLoading={authLoading} />
     </Router>
   );
 }

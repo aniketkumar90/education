@@ -19,6 +19,12 @@ export default function Login({ user, setUser }) {
     setError('');
   };
 
+  useEffect(() => {
+    if (user) {
+      navigate(user.role === 'admin' ? '/admin' : '/', { replace: true });
+    }
+  }, [user, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -111,34 +117,6 @@ export default function Login({ user, setUser }) {
               ) : 'Sign In →'}
             </button>
           </form>
-
-          {/* Quick Demo Login */}
-          <div style={{ marginTop: 16, textAlign: 'center' }}>
-            <button
-              type="button"
-              className="btn btn-outline"
-              style={{ width: '100%', fontSize: 13, justifyContent: 'center' }}
-              onClick={() => {
-                const demoUser = {
-                  _id: 'demo-admin-id',
-                  name: 'Admin',
-                  email: 'admin@dleducation.com',
-                  role: 'admin',
-                  avatar: '',
-                  bio: 'Education and tech specialist.',
-                };
-                setUser(demoUser);
-                navigate('/admin');
-              }}
-            >
-              ⚡ Quick Demo Admin Login
-            </button>
-          </div>
-
-          <p style={styles.registerNote}>
-            Default seed login:{' '}
-            <strong style={{ color: 'var(--primary)' }}>admin@dleducation.com</strong> / <strong>password123</strong>
-          </p>
         </div>
       </div>
     </div>

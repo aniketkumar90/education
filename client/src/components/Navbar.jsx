@@ -98,7 +98,7 @@ export default function Navbar({ user, setUser }) {
             </NavLink>
           ))}
 
-          {user ? (
+          {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 6 }}>
               {user.role === 'admin' && (
                 <NavLink
@@ -113,10 +113,6 @@ export default function Navbar({ user, setUser }) {
               )}
               <button style={styles.logoutBtn} onClick={handleLogout}>Logout</button>
             </div>
-          ) : (
-            <NavLink to="/login" style={styles.loginBtn}>
-              Sign In
-            </NavLink>
           )}
         </nav>
 
@@ -137,15 +133,13 @@ export default function Navbar({ user, setUser }) {
           ].map(({ to, label }) => (
             <NavLink key={to} to={to} style={styles.mobileLink} onClick={() => setMenuOpen(false)}>{label}</NavLink>
           ))}
-          {user ? (
+          {user && (
             <>
               {user.role === 'admin' && (
                 <NavLink to="/admin" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>Admin Dashboard</NavLink>
               )}
               <button style={styles.mobileLinkBtn} onClick={handleLogout}>Logout</button>
             </>
-          ) : (
-            <NavLink to="/login" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>Sign In</NavLink>
           )}
         </div>
       )}
