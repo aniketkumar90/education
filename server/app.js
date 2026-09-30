@@ -7,12 +7,12 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
-// Standard middlewares
+// Standard parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS configuration supporting local dev, production domains, and preview URLs
+// CORS configuration supporting local development, Vercel production domains, and preview URLs
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -55,35 +55,66 @@ app.use(
 // Serve local uploads folder if available
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Health check endpoint (always accessible)
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'DLEducationConnect API is running 🚀',
+// 1. Health check endpoint (always accessible, handles both /api/health and /health)
+app.get(['/api/health', '/health'], async (req, res) => {
+  let dbStatus = 'disconnected';
+  let dbError = null;
+  const hasMongoUri = Boolean(process.env.MONGO_URI);
+
+  try {
+    if (hasMongoUri) {
+      await connectDB();
+      dbStatus = 'connected';
+    } else {
+      dbStatus = 'missing_env';
+      dbError = 'MONGO_URI is not set in environment variables.';
+    }
+  } catch (err) {
+    dbStatus = 'error';
+    dbError = err.message ? err.message.replace(/:([^:@]+)@/, ':****@') : 'Connection failed';
+  }
+
+  const isHealthy = dbStatus === 'connected';
+
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'ok' : 'degraded',
+    message: isHealthy ? 'DLEducationConnect API is running 🚀' : 'API is running but database is not connected',
+    database: {
+      status: dbStatus,
+      hasMongoUri,
+      error: dbError,
+    },
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
   });
 });
 
-// Database connection assurance middleware for serverless invocations
-app.use(async (req, res, next) => {
+// 2. Database connection assurance middleware for data routes
+const ensureDbConnected = async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (err) {
-    console.error('Database connection failed on request:', err.message);
+    const safeError = err.message ? err.message.replace(/:([^:@]+)@/, ':****@') : 'Unknown DB error';
+    console.error('Database connection failed on request:', safeError);
     res.status(500).json({
       message: 'Database connection failed. Please ensure MongoDB Atlas is connected and IP is whitelisted.',
-      error: process.env.NODE_ENV === 'production' ? null : err.message,
+      details: safeError,
     });
   }
-});
+};
 
-// Routes
-app.use('/api/auth', require('./routes/userRoutes'));
-app.use('/api/blogs', require('./routes/blogRoutes'));
+// 3. Mount routes (supporting both with and without /api prefix for Vercel routing flexibility)
+const userRoutes = require('./routes/userRoutes');
+const blogRoutes = require('./routes/blogRoutes');
 
-// 404 & Error Handling
+app.use('/api/auth', ensureDbConnected, userRoutes);
+app.use('/auth', ensureDbConnected, userRoutes);
+
+app.use('/api/blogs', ensureDbConnected, blogRoutes);
+app.use('/blogs', ensureDbConnected, blogRoutes);
+
+// 4. 404 & Error Handling
 app.use(notFound);
 app.use(errorHandler);
 
