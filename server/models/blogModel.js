@@ -8,18 +8,18 @@ const blogSchema = new mongoose.Schema(
       required: [true, 'Blog title is required'],
       trim: true,
     },
-    // 2. Meta Title (SERP Title ~60-70 chars)
+    // 2. Meta Title (SERP Title)
     metaTitle: {
       type: String,
       trim: true,
-      maxlength: [70, 'Meta title should be under 70 characters for optimal SEO'],
+      maxlength: [250, 'Meta title should be under 250 characters'],
       default: '',
     },
-    // 3. Meta Description (SERP Description ~160 chars)
+    // 3. Meta Description (SERP Description)
     metaDescription: {
       type: String,
       trim: true,
-      maxlength: [200, 'Meta description should be under 200 characters for optimal SEO'],
+      maxlength: [500, 'Meta description should be under 500 characters'],
       default: '',
     },
     // 4. Focus Keyword
@@ -59,7 +59,7 @@ const blogSchema = new mongoose.Schema(
     excerpt: {
       type: String,
       required: [true, 'Short description / excerpt is required'],
-      maxlength: [400, 'Excerpt must be under 400 characters'],
+      maxlength: [1000, 'Excerpt must be under 1000 characters'],
     },
     // 11. Blog Content
     content: {
