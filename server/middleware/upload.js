@@ -63,11 +63,14 @@ const uploadToCloudinary = async (buffer, folder = 'education-blogs', originalna
     });
   }
 
-  // If in production without Cloudinary, do not save to ephemeral serverless container
+  // If in production without Cloudinary, fallback to base64 Data URL so the blog saves and images display reliably
   if (process.env.NODE_ENV === 'production') {
-    throw new Error(
-      'Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in environment variables.'
-    );
+    const ext = (path.extname(originalname) || '.jpg').replace('.', '').toLowerCase();
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+    return {
+      secure_url: `data:${mime};base64,${buffer.toString('base64')}`,
+      public_id: `inline-${Date.now()}`,
+    };
   }
 
   // Local development fallback to /uploads folder

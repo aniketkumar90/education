@@ -140,17 +140,23 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
         formData.append('featuredImageUrl', featuredImageUrl.trim());
       }
 
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers = { 'Content-Type': 'multipart/form-data' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const isDbEdit = blogToEdit?._id && /^[0-9a-fA-F]{24}$/.test(blogToEdit._id);
 
       if (isDbEdit) {
         await axios.put(`/api/blogs/${blogToEdit._id}`, formData, {
           withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers,
         });
       } else {
         await axios.post('/api/blogs', formData, {
           withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers,
         });
       }
 
@@ -167,7 +173,8 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       }, 1200);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to save blog post. Please check backend connection.');
+      const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
+      setError(serverMsg || 'Failed to save blog post. Please check backend connection.');
     } finally {
       setSubmitting(false);
     }
