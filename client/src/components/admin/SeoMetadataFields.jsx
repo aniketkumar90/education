@@ -32,7 +32,7 @@ export default function SeoMetadataFields({ form, onChange, onAutoSlug }) {
         <div style={styles.serpPreview}>
           <div style={styles.serpTop}>
             <span style={styles.serpBadge}>Google Search Preview</span>
-            <span style={styles.serpUrl}>https://dleducationconnect.com › blog › {previewSlug}</span>
+            <span style={styles.serpUrl}>https://dleducationconnect.in › blog › {previewSlug}</span>
           </div>
           <div style={styles.serpTitle}>
             {form.metaTitle || form.title || 'Your SEO Meta Title Will Appear Here'}

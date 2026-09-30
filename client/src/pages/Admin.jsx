@@ -24,7 +24,7 @@ export default function Admin({ user, setUser }) {
   // Default fallback user if not logged in
   const currentUser = user || {
     name: 'Admin',
-    email: 'admin@dleducationconnect.com',
+    email: 'admin@dleducationconnect.in',
     role: 'admin',
   };
 
@@ -243,7 +243,7 @@ export default function Admin({ user, setUser }) {
                 <div style={styles.userAvatarBig}>{user?.name?.charAt(0) || 'A'}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>{user?.name || 'Administrator'}</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{user?.email || 'admin@dleducationconnect.com'}</div>
+                  <div style={{ fontSize: 12, color: '#64748b' }}>{user?.email || 'admin@dleducationconnect.in'}</div>
                 </div>
                 <span style={styles.activeRoleBadge}>SUPER ADMIN</span>
               </div>
@@ -264,7 +264,7 @@ export default function Admin({ user, setUser }) {
                 </div>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>Email</label>
-                  <input type="text" readOnly value={user?.email || 'admin@dleducationconnect.com'} style={styles.readInput} />
+                  <input type="text" readOnly value={user?.email || 'admin@dleducationconnect.in'} style={styles.readInput} />
                 </div>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>Role</label>

@@ -42,7 +42,7 @@ export default function MainContentSection({
         <div style={styles.urlBar}>
           <div style={styles.urlDisplay}>
             <span style={styles.urlLabel}>🌐 Permalink:</span>
-            <span style={styles.urlDomain}>https://dleducationconnect.com/blog/</span>
+            <span style={styles.urlDomain}>https://dleducationconnect.in/blog/</span>
             {isEditingSlug ? (
               <input
                 type="text"
