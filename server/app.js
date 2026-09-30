@@ -16,12 +16,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS configuration supporting local development, Vercel production domains, and preview URLs
+// CORS configuration supporting local development, Vercel production domains, and custom domains
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:3000',
+  'https://dleducationconnect.in',
+  'https://www.dleducationconnect.in',
+  'http://dleducationconnect.in',
+  'http://www.dleducationconnect.in',
 ];
 
 if (process.env.CLIENT_URL) {
@@ -43,6 +47,7 @@ app.use(
       if (
         allowedOrigins.includes(normalized) ||
         origin.endsWith('.vercel.app') ||
+        origin.endsWith('dleducationconnect.in') ||
         (process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin))
       ) {
         return callback(null, true);
