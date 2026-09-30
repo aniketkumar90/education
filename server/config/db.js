@@ -1,4 +1,10 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Force IPv4 DNS resolution first (Atlas M0 Free Tier does NOT support IPv6, which Linux serverless containers default to)
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 // Cache database connection across serverless invocations
 let cached = global.mongoose;
@@ -41,6 +47,7 @@ const connectDB = async () => {
     serverSelectionTimeoutMS: 15000, // 15s to allow for serverless cold start DNS resolution
     socketTimeoutMS: 45000,
     maxPoolSize: 10,
+    family: 4, // Force IPv4 to prevent unreachable IPv6 route on AWS Lambda / Vercel
     autoIndex: process.env.NODE_ENV !== 'production',
   };
 
