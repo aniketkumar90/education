@@ -3,7 +3,11 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
+const validateEnv = require('./config/validateEnv');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+
+// Validate environment variables safely without printing secret values
+validateEnv();
 
 const app = express();
 
@@ -59,12 +63,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get(['/api/health', '/health'], async (req, res) => {
   let dbStatus = 'disconnected';
   let dbError = null;
+  let host = null;
   const hasMongoUri = Boolean(process.env.MONGO_URI);
 
   try {
     if (hasMongoUri) {
-      await connectDB();
+      const conn = await connectDB();
       dbStatus = 'connected';
+      host = conn.host;
     } else {
       dbStatus = 'missing_env';
       dbError = 'MONGO_URI is not set in environment variables.';
@@ -82,7 +88,19 @@ app.get(['/api/health', '/health'], async (req, res) => {
     database: {
       status: dbStatus,
       hasMongoUri,
+      host,
       error: dbError,
+    },
+    config: {
+      mongoUriConfigured: hasMongoUri,
+      jwtSecretConfigured: Boolean(process.env.JWT_SECRET),
+      clientUrlConfigured: Boolean(process.env.CLIENT_URL),
+      cloudinaryConfigured: Boolean(
+        process.env.CLOUDINARY_CLOUD_NAME &&
+        process.env.CLOUDINARY_API_KEY &&
+        process.env.CLOUDINARY_API_SECRET &&
+        process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name'
+      ),
     },
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',

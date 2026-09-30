@@ -1,16 +1,26 @@
 import axios from 'axios';
 
-// Get API Base URL from environment variable, stripping any trailing slash
-// If VITE_API_URL is empty (e.g. in local Vite development), relative paths like /api/... work with the Vite dev proxy
-export const API_BASE_URL = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/\/+$/, '')
-  : '';
+// Get API Base URL from environment variable, stripping any trailing slash and any trailing /api
+let rawUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+if (rawUrl.endsWith('/api')) {
+  rawUrl = rawUrl.slice(0, -4);
+}
+export const API_BASE_URL = rawUrl;
 
 // Configure global axios defaults so all existing axios calls throughout the app use the correct base URL and send cookies
 if (API_BASE_URL) {
   axios.defaults.baseURL = API_BASE_URL;
 }
 axios.defaults.withCredentials = true;
+
+// Attach Authorization header if token exists in localStorage (dual cookie + bearer protection)
+axios.interceptors.request.use((config) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 // Pre-configured axios instance for explicit use
 export const api = axios.create({

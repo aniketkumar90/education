@@ -44,6 +44,7 @@ export default function App() {
       })
       .catch(() => {
         setUser(null);
+        localStorage.removeItem('token');
       });
   }, []);
 

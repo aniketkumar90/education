@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { DEFAULT_BLOGS } from '../data/blogsData';
 import { getImageUrl } from '../api/api';
 
 const TRENDING_CATEGORIES = ['University', 'Courses'];
@@ -19,7 +18,7 @@ const formatDate = (d) =>
   new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 export default function Sidebar() {
-  const [latestBlogs, setLatestBlogs] = useState(DEFAULT_BLOGS.slice(0, 4));
+  const [latestBlogs, setLatestBlogs] = useState([]);
   const [appForm, setAppForm] = useState({
     name: '',
     phone: '',
@@ -39,7 +38,7 @@ export default function Sidebar() {
         }
       })
       .catch(() => {
-        setLatestBlogs(DEFAULT_BLOGS.slice(0, 4));
+        setLatestBlogs([]);
       });
   }, []);
 

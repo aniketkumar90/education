@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { DEFAULT_BLOGS } from '../data/blogsData';
 
 // Modular Admin Components
 import AdminSidebar from '../components/admin/AdminSidebar';
@@ -38,17 +37,11 @@ export default function Admin({ user, setUser }) {
     setLoading(true);
     try {
       const { data } = await axios.get('/api/blogs?status=all&limit=50', { withCredentials: true });
-      if (data && data.blogs && data.blogs.length > 0) {
-        const dbSlugs = new Set(data.blogs.map((b) => b.slug || b._id));
-        const remainingFallbacks = DEFAULT_BLOGS.filter(
-          (b) => !dbSlugs.has(b.slug) && !dbSlugs.has(b._id)
-        );
-        setBlogs([...data.blogs, ...remainingFallbacks]);
-      } else {
-        setBlogs(DEFAULT_BLOGS);
-      }
-    } catch {
-      setBlogs(DEFAULT_BLOGS);
+      setBlogs(data.blogs || []);
+    } catch (err) {
+      console.error('Failed to fetch blogs from database:', err);
+      setBlogs([]);
+      alert(err.response?.data?.message || 'Failed to fetch blogs from database.');
     } finally {
       setLoading(false);
     }
@@ -56,16 +49,13 @@ export default function Admin({ user, setUser }) {
 
   const handleToggleStatus = async (blog) => {
     const nextStatus = blog.status === 'Draft' ? 'Published' : 'Draft';
-    const isDbBlog = blog._id && /^[0-9a-fA-F]{24}$/.test(blog._id);
 
     try {
-      if (isDbBlog) {
-        await axios.put(
-          `/api/blogs/${blog._id}`,
-          { status: nextStatus, published: nextStatus === 'Published' },
-          { withCredentials: true }
-        );
-      }
+      await axios.put(
+        `/api/blogs/${blog._id}`,
+        { status: nextStatus, published: nextStatus === 'Published' },
+        { withCredentials: true }
+      );
       setBlogs((prev) =>
         prev.map((b) =>
           b._id === blog._id
@@ -73,21 +63,18 @@ export default function Admin({ user, setUser }) {
             : b
         )
       );
-    } catch {
-      alert('Failed to update post status.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update post status.');
     }
   };
 
   const handleDeleteBlog = async (id) => {
     if (!window.confirm('Are you sure you want to delete this blog post?')) return;
     try {
-      const isDbBlog = id && /^[0-9a-fA-F]{24}$/.test(id);
-      if (isDbBlog) {
-        await axios.delete(`/api/blogs/${id}`, { withCredentials: true });
-      }
+      await axios.delete(`/api/blogs/${id}`, { withCredentials: true });
       setBlogs((prev) => prev.filter((b) => b._id !== id));
-    } catch {
-      alert('Failed to delete blog post.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete blog post.');
     }
   };
 
@@ -95,6 +82,7 @@ export default function Admin({ user, setUser }) {
     try {
       await axios.post('/api/auth/logout', {}, { withCredentials: true });
     } catch {}
+    localStorage.removeItem('token');
     if (setUser) setUser(null);
     navigate('/login');
   };

@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import BlogCard from './BlogCard';
-import { DEFAULT_BLOGS } from '../data/blogsData';
 
 const CATEGORIES = ['All', 'University', 'Courses'];
 
 export default function BlogGrid() {
-  const [blogs, setBlogs] = useState(DEFAULT_BLOGS);
-  const [loading, setLoading] = useState(false);
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -26,6 +26,7 @@ export default function BlogGrid() {
 
     const fetchBlogs = async () => {
       setLoading(true);
+      setError('');
       try {
         const params = { page, limit: 6 };
         if (activeCategory !== 'All') params.category = activeCategory;
@@ -33,67 +34,18 @@ export default function BlogGrid() {
 
         const { data } = await axios.get('/api/blogs', { params });
         if (isMounted) {
-          if (data && data.blogs && data.blogs.length > 0) {
-            const dbIds = new Set(data.blogs.map((b) => b.slug || b._id));
-            let extraFallbacks = DEFAULT_BLOGS.filter(
-              (b) => !dbIds.has(b.slug) && !dbIds.has(b._id)
-            );
-            if (activeCategory !== 'All') {
-              const lowerCat = activeCategory.toLowerCase();
-              extraFallbacks = extraFallbacks.filter(
-                (b) =>
-                  b.category?.toLowerCase() === lowerCat ||
-                  b.tags?.some((t) => t.toLowerCase() === lowerCat) ||
-                  b.title.toLowerCase().includes(lowerCat)
-              );
-            }
-            if (search) {
-              const lowerQ = search.toLowerCase();
-              extraFallbacks = extraFallbacks.filter(
-                (b) =>
-                  b.title.toLowerCase().includes(lowerQ) ||
-                  b.excerpt?.toLowerCase().includes(lowerQ)
-              );
-            }
-            setBlogs([...data.blogs, ...extraFallbacks]);
-            setPages(Math.max(data.pages || 1, Math.ceil((data.blogs.length + extraFallbacks.length) / 6)));
-          } else {
-            // Filter fallback default data
-            filterFallback(activeCategory, search);
-          }
+          setBlogs(data.blogs || []);
+          setPages(data.pages || 1);
         }
-      } catch {
-        // Backend not yet running or no MongoDB - use rich fallback data
+      } catch (err) {
         if (isMounted) {
-          filterFallback(activeCategory, search);
+          const errMsg = err.response?.data?.message || err.message || 'Failed to load articles from database.';
+          setError(errMsg);
+          setBlogs([]);
         }
       } finally {
         if (isMounted) setLoading(false);
       }
-    };
-
-    const filterFallback = (cat, q) => {
-      let filtered = [...DEFAULT_BLOGS];
-      if (cat && cat !== 'All') {
-        const lowerCat = cat.toLowerCase();
-        filtered = filtered.filter(
-          (b) =>
-            b.category?.toLowerCase() === lowerCat ||
-            b.tags?.some((t) => t.toLowerCase() === lowerCat) ||
-            b.title.toLowerCase().includes(lowerCat)
-        );
-      }
-      if (q) {
-        const lowerQ = q.toLowerCase();
-        filtered = filtered.filter(
-          (b) =>
-            b.title.toLowerCase().includes(lowerQ) ||
-            b.excerpt?.toLowerCase().includes(lowerQ) ||
-            b.tags?.some((t) => t.toLowerCase().includes(lowerQ))
-        );
-      }
-      setBlogs(filtered);
-      setPages(Math.max(1, Math.ceil(filtered.length / 6)));
     };
 
     fetchBlogs();
@@ -138,8 +90,20 @@ export default function BlogGrid() {
         </p>
       )}
 
-      {/* Grid of Cards */}
-      {loading ? (
+      {/* Grid of Cards / States */}
+      {error ? (
+        <div style={styles.errorBox}>
+          <span style={{ fontSize: 40, display: 'block', marginBottom: 10 }}>⚠️</span>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#b91c1c', marginBottom: 6 }}>Database Unavailable</h3>
+          <p style={{ fontSize: 13.5, color: '#7f1d1d', marginBottom: 14 }}>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn btn-outline btn-sm"
+          >
+            Retry Connection
+          </button>
+        </div>
+      ) : loading ? (
         <div className="responsive-blog-grid" style={styles.grid}>
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} style={styles.skeletonCard}>
@@ -174,7 +138,7 @@ export default function BlogGrid() {
       )}
 
       {/* Pagination */}
-      {pages > 1 && !loading && (
+      {pages > 1 && !loading && !error && (
         <div style={styles.pagination}>
           <button
             className="btn btn-outline btn-sm"
@@ -266,6 +230,14 @@ const styles = {
     background: '#ffffff',
     borderRadius: 12,
     border: '1px solid #e2e8f0',
+  },
+  errorBox: {
+    textAlign: 'center',
+    padding: '50px 20px',
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: 12,
+    margin: '16px 0',
   },
   emptyIcon: { fontSize: 48, display: 'block', marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: 700, color: '#1e293b', marginBottom: 6 },

@@ -19,11 +19,12 @@ export default function Navbar({ user, setUser }) {
   const handleLogout = async () => {
     try {
       await axios.post('/api/auth/logout', {}, { withCredentials: true });
-      setUser(null);
-      navigate('/');
     } catch (err) {
       console.error(err);
     }
+    localStorage.removeItem('token');
+    setUser(null);
+    navigate('/');
   };
 
   return (

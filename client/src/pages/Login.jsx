@@ -25,6 +25,9 @@ export default function Login({ user, setUser }) {
     setError('');
     try {
       const { data } = await axios.post('/api/auth/login', form, { withCredentials: true });
+      if (data && data.token) {
+        localStorage.setItem('token', data.token);
+      }
       setUser(data);
       navigate(data.role === 'admin' ? '/admin' : '/');
     } catch (err) {

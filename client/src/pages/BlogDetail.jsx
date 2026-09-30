@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { DEFAULT_BLOGS } from '../data/blogsData';
 import { getImageUrl } from '../api/api';
 
 const formatDate = (d) =>
@@ -50,15 +49,9 @@ export default function BlogDetail() {
           setRecentBlogs(data.blogs.filter((b) => b._id !== id && b.slug !== id).slice(0, 4));
         }
       })
-      .catch(() => {
-        const found = DEFAULT_BLOGS.find((b) => b._id === id || b.slug === id);
-        if (found) {
-          setBlog(found);
-          const others = DEFAULT_BLOGS.filter((b) => b._id !== id && b.slug !== id);
-          setRecentBlogs(others.slice(0, 4));
-        } else {
-          navigate('/blogs');
-        }
+      .catch((err) => {
+        console.error('Failed to load blog:', err);
+        setBlog(null);
       })
       .finally(() => setLoading(false));
   }, [id, navigate]);
@@ -112,7 +105,20 @@ export default function BlogDetail() {
     );
   }
 
-  if (!blog) return null;
+  if (!blog) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh' }}>
+        <span style={{ fontSize: 50, display: 'block', marginBottom: 16 }}>🔍</span>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', marginBottom: 10 }}>Article Not Found</h2>
+        <p style={{ color: '#64748b', marginBottom: 20 }}>
+          The article you are looking for does not exist in the database or could not be loaded.
+        </p>
+        <Link to="/blogs" className="btn btn-primary">
+          ← Back to All Articles
+        </Link>
+      </div>
+    );
+  }
 
   // Cover image extraction using centralized resolver
   const coverUrl = getImageUrl(blog.coverImage);
