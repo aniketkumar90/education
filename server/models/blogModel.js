@@ -118,7 +118,7 @@ blogSchema.pre('save', function () {
 
   // Handle slug
   if (this.slug) {
-    // Sanitize user-provided slug (strip /blog/ prefix if present)
+    // Sanitize user/controller-provided slug
     let cleanSlug = this.slug
       .replace(/^\/?blog\/?/i, '')
       .toLowerCase()
@@ -127,10 +127,6 @@ blogSchema.pre('save', function () {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
 
-    const eduMatch = cleanSlug.match(/^(.*?education)/i);
-    if (eduMatch && eduMatch[1]) {
-      cleanSlug = eduMatch[1];
-    }
     this.slug = cleanSlug || 'post-' + Date.now();
   } else if (this.isModified('title') || this.isNew) {
     let clean = this.title
