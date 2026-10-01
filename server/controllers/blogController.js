@@ -137,30 +137,29 @@ const createBlog = async (req, res, next) => {
 
     const isPublished = status !== 'Draft';
 
-    // Generate clean and guaranteed unique slug
-    let finalSlug = slug;
-    if (!finalSlug || !finalSlug.trim()) {
-      finalSlug = title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-    } else {
-      finalSlug = finalSlug
-        .replace(/^\/?blog\/?/i, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
+    // Generate clean slug cut at 'education' keyword if present
+    let rawSlug = (slug && slug.trim()) ? slug : title;
+    let cleanSlug = rawSlug
+      .replace(/^\/?blog\/?/i, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+
+    const eduMatch = cleanSlug.match(/^(.*?education)/i);
+    if (eduMatch && eduMatch[1]) {
+      cleanSlug = eduMatch[1];
     }
+    cleanSlug = cleanSlug.replace(/^-|-$/g, '');
+    if (!cleanSlug) cleanSlug = 'post-' + Date.now();
 
-    if (!finalSlug) finalSlug = 'post-' + Date.now();
-
-    const existingBlog = await Blog.findOne({ slug: finalSlug });
-    if (existingBlog) {
-      finalSlug = `${finalSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
+    // Check if slug already exists to prevent duplicate key error crash
+    let finalSlug = cleanSlug;
+    let counter = 1;
+    while (await Blog.findOne({ slug: finalSlug })) {
+      counter++;
+      finalSlug = `${cleanSlug}-${counter}`;
     }
 
     const blog = await Blog.create({
@@ -235,7 +234,8 @@ const updateBlog = async (req, res, next) => {
     if (metaDescription !== undefined) blog.metaDescription = metaDescription;
     if (focusKeyword !== undefined) blog.focusKeyword = focusKeyword;
     if (slug !== undefined) {
-      let cleanSlug = slug
+      let rawSlug = slug.trim() || blog.title;
+      let cleanSlug = rawSlug
         .replace(/^\/?blog\/?/i, '')
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
@@ -243,12 +243,20 @@ const updateBlog = async (req, res, next) => {
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-');
 
+      const eduMatch = cleanSlug.match(/^(.*?education)/i);
+      if (eduMatch && eduMatch[1]) {
+        cleanSlug = eduMatch[1];
+      }
+      cleanSlug = cleanSlug.replace(/^-|-$/g, '');
+
       if (cleanSlug && cleanSlug !== blog.slug) {
-        const existing = await Blog.findOne({ slug: cleanSlug, _id: { $ne: blog._id } });
-        if (existing) {
-          cleanSlug = `${cleanSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
+        let candidateSlug = cleanSlug;
+        let counter = 1;
+        while (await Blog.findOne({ slug: candidateSlug, _id: { $ne: blog._id } })) {
+          counter++;
+          candidateSlug = `${cleanSlug}-${counter}`;
         }
-        blog.slug = cleanSlug;
+        blog.slug = candidateSlug;
       }
     }
     if (category !== undefined) blog.category = category;

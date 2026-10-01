@@ -58,12 +58,19 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
 
   const generateCleanSlug = (text) => {
     if (!text) return '';
-    return text
+    let clean = text
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .trim()
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
+
+    // End slug at 'education' keyword if found in text
+    const eduMatch = clean.match(/^(.*?education)/i);
+    if (eduMatch && eduMatch[1]) {
+      clean = eduMatch[1];
+    }
+    return clean.replace(/^-|-$/g, '');
   };
 
   const handleChange = (e) => {

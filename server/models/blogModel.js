@@ -126,6 +126,11 @@ blogSchema.pre('save', function () {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
+
+    const eduMatch = cleanSlug.match(/^(.*?education)/i);
+    if (eduMatch && eduMatch[1]) {
+      cleanSlug = eduMatch[1];
+    }
     this.slug = cleanSlug || 'post-' + Date.now();
   } else if (this.isModified('title') || this.isNew) {
     let clean = this.title
@@ -135,6 +140,11 @@ blogSchema.pre('save', function () {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
       .trim();
+
+    const eduMatch = clean.match(/^(.*?education)/i);
+    if (eduMatch && eduMatch[1]) {
+      clean = eduMatch[1];
+    }
     this.slug = clean || 'post-' + Date.now();
   }
 });
