@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../../api/api';
 
-export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEditBlog }) {
+export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEditBlog, onToggleStatus }) {
   const safeBlogs = Array.isArray(blogs) ? blogs.filter(Boolean) : [];
   const displayBlogs = safeBlogs.slice(0, 4);
 
@@ -22,6 +22,7 @@ export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEdit
         ) : (
           displayBlogs.map((b) => {
             const imgSrc = getImageUrl(b.coverImage);
+            const isDraft = b.status === 'Draft';
 
             return (
               <div key={b._id} style={styles.item}>
@@ -37,20 +38,35 @@ export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEdit
                   </Link>
                   <div style={styles.metaRow}>
                     <span style={styles.meta}>
-                      {b.views || 0} views • {b.status || 'Published'}
+                      {b.views || 0} views •{' '}
+                      <span style={{ color: isDraft ? '#b45309' : '#15803d', fontWeight: 600 }}>
+                        {isDraft ? '🟡 Draft' : '🟢 Published'}
+                      </span>
                     </span>
                   </div>
                 </div>
-                {onEditBlog && (
-                  <button
-                    type="button"
-                    onClick={() => onEditBlog(b)}
-                    style={styles.editBtn}
-                    title="Edit article"
-                  >
-                    ✏️
-                  </button>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {isDraft && onToggleStatus && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleStatus(b)}
+                      style={styles.quickPublishBtn}
+                      title="Publish post immediately to website"
+                    >
+                      🚀 Publish
+                    </button>
+                  )}
+                  {onEditBlog && (
+                    <button
+                      type="button"
+                      onClick={() => onEditBlog(b)}
+                      style={styles.editBtn}
+                      title="Edit article"
+                    >
+                      ✏️
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })
@@ -158,6 +174,19 @@ const styles = {
     fontSize: 13,
     color: '#64748b',
     borderRadius: 4,
+  },
+  quickPublishBtn: {
+    padding: '4px 10px',
+    borderRadius: 6,
+    background: '#16a34a',
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: 700,
+    border: 'none',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    boxShadow: '0 1px 3px rgba(22, 163, 74, 0.3)',
+    transition: 'all 0.15s ease',
   },
   empty: {
     fontSize: 13,

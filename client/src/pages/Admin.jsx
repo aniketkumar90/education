@@ -39,8 +39,25 @@ export default function Admin({ user, setUser }) {
 
   // Fetch blogs data and inquiry stats
   useEffect(() => {
+    // If user prop is null but token exists (e.g. cold-start auth failure), re-attempt profile fetch
+    const token = localStorage.getItem('token');
+    if (!user && token && setUser) {
+      axios
+        .get('/api/auth/me', { withCredentials: true })
+        .then((res) => {
+          if (res.data) setUser(res.data.user || res.data);
+        })
+        .catch((err) => {
+          // If 401 — token is truly invalid, redirect to login
+          if (err?.response?.status === 401 || err?.response?.status === 403) {
+            localStorage.removeItem('token');
+            navigate('/login', { replace: true });
+          }
+        });
+    }
     fetchBlogs();
     fetchInquiryStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchInquiryStats = async () => {
@@ -62,13 +79,14 @@ export default function Admin({ user, setUser }) {
 
   const fetchBlogs = async () => {
     setLoading(true);
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     try {
-      const { data } = await axios.get('/api/blogs?status=all&limit=50', { withCredentials: true });
+      const { data } = await axios.get('/api/blogs?status=all&limit=50', { withCredentials: true, headers });
       setBlogs(Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : []);
     } catch (err) {
       console.error('Failed to fetch blogs from database:', err);
       setBlogs([]);
-      // Do not use blocking alert on background refresh
     } finally {
       setLoading(false);
     }
@@ -76,12 +94,14 @@ export default function Admin({ user, setUser }) {
 
   const handleToggleStatus = async (blog) => {
     const nextStatus = blog.status === 'Draft' ? 'Published' : 'Draft';
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
       await axios.put(
         `/api/blogs/${blog._id}`,
         { status: nextStatus, published: nextStatus === 'Published' },
-        { withCredentials: true }
+        { withCredentials: true, headers }
       );
       setBlogs((prev) =>
         prev.map((b) =>
@@ -97,8 +117,10 @@ export default function Admin({ user, setUser }) {
 
   const handleDeleteBlog = async (id) => {
     if (!window.confirm('Are you sure you want to delete this blog post?')) return;
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     try {
-      await axios.delete(`/api/blogs/${id}`, { withCredentials: true });
+      await axios.delete(`/api/blogs/${id}`, { withCredentials: true, headers });
       setBlogs((prev) => prev.filter((b) => b._id !== id));
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete blog post.');
@@ -204,6 +226,7 @@ export default function Admin({ user, setUser }) {
                   blogs={blogs}
                   onManage={() => setActiveTab('blogs')}
                   onEditBlog={handleEditBlog}
+                  onToggleStatus={handleToggleStatus}
                 />
               </div>
             </div>

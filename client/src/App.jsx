@@ -34,6 +34,10 @@ function AppContent({ user, setUser, authLoading }) {
                 </div>
               ) : user ? (
                 <Admin user={user} setUser={setUser} />
+              ) : localStorage.getItem('token') ? (
+                // Token exists but auth check may have failed due to cold start — attempt to access Admin
+                // The Admin page itself will redirect to login if the token is truly invalid
+                <Admin user={user} setUser={setUser} />
               ) : (
                 <Navigate to="/login" replace />
               )
@@ -51,15 +55,21 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
+    // Check if user is logged in via stored token or cookie
+    // Only clear the token on explicit 401 (unauthorized) — NOT on network errors or cold-start failures
     axios
       .get('/api/auth/me', { withCredentials: true })
       .then((res) => {
         if (res.data) setUser(res.data.user || res.data);
       })
-      .catch(() => {
-        setUser(null);
-        localStorage.removeItem('token');
+      .catch((err) => {
+        const status = err?.response?.status;
+        if (status === 401 || status === 403) {
+          // Only clear token if server explicitly rejects the session
+          setUser(null);
+          localStorage.removeItem('token');
+        }
+        // For network errors, DB cold starts, 5xx — keep token, allow retry on next navigation
       })
       .finally(() => {
         setAuthLoading(false);
