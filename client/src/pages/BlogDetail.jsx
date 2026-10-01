@@ -293,14 +293,16 @@ export default function BlogDetail() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
-  // 3-Second Timed Admission Popup Modal
+  // 5-Second Timed Admission Popup Modal (only triggers 5 seconds after blog content is visible)
   useEffect(() => {
     setShowPopup(false);
+    if (!blog || loading) return;
+
     const timer = setTimeout(() => {
       setShowPopup(true);
-    }, 3000);
+    }, 5000);
     return () => clearTimeout(timer);
-  }, [id]);
+  }, [id, Boolean(blog), loading]);
 
   // Close popup modal on Escape key press
   useEffect(() => {
