@@ -12,16 +12,12 @@ export default function MainContentSection({
   const cleanSlug = form.slug
     ? form.slug.replace(/^\/?blog\/?/i, '')
     : form.title
-    ? (() => {
-        const raw = form.title
-          .toLowerCase()
-          .replace(/[^a-z0-9 -]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^-|-$/g, '');
-        const match = raw.match(/(.*?(-education))/i);
-        return match ? match[1] : raw;
-      })()
+    ? form.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
     : 'url-slug';
 
   const tagsList = form.tags

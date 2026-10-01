@@ -137,12 +137,38 @@ const createBlog = async (req, res, next) => {
 
     const isPublished = status !== 'Draft';
 
+    // Generate clean and guaranteed unique slug
+    let finalSlug = slug;
+    if (!finalSlug || !finalSlug.trim()) {
+      finalSlug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+    } else {
+      finalSlug = finalSlug
+        .replace(/^\/?blog\/?/i, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+    }
+
+    if (!finalSlug) finalSlug = 'post-' + Date.now();
+
+    const existingBlog = await Blog.findOne({ slug: finalSlug });
+    if (existingBlog) {
+      finalSlug = `${finalSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
     const blog = await Blog.create({
       title,
       metaTitle: metaTitle || title,
       metaDescription: metaDescription || excerpt,
       focusKeyword: focusKeyword || '',
-      slug: slug || undefined,
+      slug: finalSlug,
       category: category || 'University',
       tags: parsedTags,
       coverImage,
@@ -208,7 +234,23 @@ const updateBlog = async (req, res, next) => {
     if (metaTitle !== undefined) blog.metaTitle = metaTitle;
     if (metaDescription !== undefined) blog.metaDescription = metaDescription;
     if (focusKeyword !== undefined) blog.focusKeyword = focusKeyword;
-    if (slug !== undefined) blog.slug = slug;
+    if (slug !== undefined) {
+      let cleanSlug = slug
+        .replace(/^\/?blog\/?/i, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+
+      if (cleanSlug && cleanSlug !== blog.slug) {
+        const existing = await Blog.findOne({ slug: cleanSlug, _id: { $ne: blog._id } });
+        if (existing) {
+          cleanSlug = `${cleanSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+        blog.slug = cleanSlug;
+      }
+    }
     if (category !== undefined) blog.category = category;
     if (imageAlt !== undefined) blog.imageAlt = imageAlt;
     if (excerpt !== undefined) blog.excerpt = excerpt;

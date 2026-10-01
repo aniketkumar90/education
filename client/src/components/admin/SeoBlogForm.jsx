@@ -57,18 +57,13 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
   }, [blogToEdit]);
 
   const generateCleanSlug = (text) => {
-    let clean = text
+    if (!text) return '';
+    return text
       .toLowerCase()
-      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
       .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    const eduMatch = clean.match(/(.*?(-education))/i);
-    if (eduMatch && eduMatch[1]) {
-      return eduMatch[1];
-    }
-    return clean;
+      .replace(/-+/g, '-');
   };
 
   const handleChange = (e) => {
@@ -141,36 +136,40 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       }
 
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers = { 'Content-Type': 'multipart/form-data' };
+      const headers = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
       const isDbEdit = blogToEdit?._id && /^[0-9a-fA-F]{24}$/.test(blogToEdit._id);
+      let responseData = null;
 
       if (isDbEdit) {
-        await axios.put(`/api/blogs/${blogToEdit._id}`, formData, {
+        const res = await axios.put(`/api/blogs/${blogToEdit._id}`, formData, {
           withCredentials: true,
           headers,
         });
+        responseData = res.data;
       } else {
-        await axios.post('/api/blogs', formData, {
+        const res = await axios.post('/api/blogs', formData, {
           withCredentials: true,
           headers,
         });
+        responseData = res.data;
       }
 
+      const createdSlug = responseData?.slug || form.slug;
       const msg = isDbEdit
-        ? `💾 Blog post updated successfully as ${targetStatus}!`
+        ? `💾 Blog post updated successfully! URL: /blog/${createdSlug}`
         : targetStatus === 'Draft'
-        ? '💾 Blog saved as Draft!'
-        : '🚀 Blog published successfully!';
+        ? `💾 Blog saved as Draft! (URL: /blog/${createdSlug})`
+        : `🚀 Blog published successfully! URL: /blog/${createdSlug}`;
 
       setSuccessMsg(msg);
 
       setTimeout(() => {
         if (onSuccess) onSuccess();
-      }, 1200);
+      }, 1500);
     } catch (err) {
       console.error(err);
       const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;

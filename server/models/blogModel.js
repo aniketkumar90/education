@@ -135,9 +135,7 @@ blogSchema.pre('save', function () {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
       .trim();
-
-    const eduMatch = clean.match(/(.*?(-education))/i);
-    this.slug = eduMatch && eduMatch[1] ? eduMatch[1] : clean;
+    this.slug = clean || 'post-' + Date.now();
   }
 });
 
