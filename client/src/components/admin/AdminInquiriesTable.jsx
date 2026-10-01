@@ -236,7 +236,11 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
           </div>
         ) : error ? (
           <div style={{ textAlign: 'center', padding: '36px 16px', color: '#ef4444' }}>
-            <p style={{ fontWeight: 700 }}>{error}</p>
+            <p style={{ fontWeight: 700 }}>
+              {typeof error === 'object' && error !== null
+                ? (error.message || JSON.stringify(error))
+                : String(error)}
+            </p>
             <button type="button" onClick={fetchInquiries} style={styles.retryBtn}>
               Retry Loading
             </button>

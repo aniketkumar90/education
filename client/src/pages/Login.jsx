@@ -74,7 +74,13 @@ export default function Login({ user, setUser }) {
           <h2 style={styles.formTitle}>Sign In</h2>
           <p style={styles.formSub}>Enter your credentials to continue</p>
 
-          {error && <div style={styles.errorAlert}>{error}</div>}
+          {error && (
+            <div style={styles.errorAlert}>
+              {typeof error === 'object' && error !== null
+                ? (error.message || JSON.stringify(error))
+                : String(error)}
+            </div>
+          )}
 
           <form style={styles.form} onSubmit={handleSubmit}>
             <div className="form-group">

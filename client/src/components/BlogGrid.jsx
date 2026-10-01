@@ -95,7 +95,11 @@ export default function BlogGrid() {
         <div style={styles.errorBox}>
           <span style={{ fontSize: 40, display: 'block', marginBottom: 10 }}>⚠️</span>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#b91c1c', marginBottom: 6 }}>Database Unavailable</h3>
-          <p style={{ fontSize: 13.5, color: '#7f1d1d', marginBottom: 14 }}>{error}</p>
+          <p style={{ fontSize: 13.5, color: '#7f1d1d', marginBottom: 14 }}>
+            {typeof error === 'object' && error !== null
+              ? (error.message || JSON.stringify(error))
+              : String(error)}
+          </p>
           <button
             onClick={() => window.location.reload()}
             className="btn btn-outline btn-sm"

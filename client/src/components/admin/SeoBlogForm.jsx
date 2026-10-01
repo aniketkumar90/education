@@ -146,6 +146,11 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       formData.append('status', targetStatus);
 
       if (coverImage) {
+        if (coverImage.size && coverImage.size > 4.5 * 1024 * 1024) {
+          setError('Image file is too large (max 4.5 MB for upload). Please choose a smaller file or paste an image URL.');
+          setSubmitting(false);
+          return;
+        }
         formData.append('coverImage', coverImage);
       } else if (featuredImageUrl) {
         formData.append('featuredImageUrl', featuredImageUrl.trim());
@@ -192,8 +197,30 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       }, 1200);
     } catch (err) {
       console.error('Failed to save blog:', err);
-      const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
-      setError(serverMsg || 'Failed to save blog post. Please check backend connection.');
+      let errMsg = 'Failed to save blog post. Please check backend connection.';
+      if (err.response?.data) {
+        const d = err.response.data;
+        if (typeof d === 'string') {
+          errMsg = d;
+        } else if (typeof d.message === 'string') {
+          errMsg = d.message;
+        } else if (typeof d.error === 'string') {
+          errMsg = d.error;
+        } else if (d.error && typeof d.error.message === 'string') {
+          errMsg = d.error.message;
+        } else if (d.code && d.message) {
+          errMsg = `${d.message} (${d.code})`;
+        } else {
+          try {
+            errMsg = JSON.stringify(d);
+          } catch {
+            errMsg = 'Server returned an error.';
+          }
+        }
+      } else if (err.message && typeof err.message === 'string') {
+        errMsg = err.message;
+      }
+      setError(String(errMsg));
     } finally {
       setSubmitting(false);
     }
@@ -201,11 +228,19 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
 
   const isEditing = Boolean(blogToEdit);
 
+  const displayError = typeof error === 'object' && error !== null
+    ? (error.message || JSON.stringify(error))
+    : String(error || '');
+
+  const displaySuccess = typeof successMsg === 'object' && successMsg !== null
+    ? (successMsg.message || JSON.stringify(successMsg))
+    : String(successMsg || '');
+
   return (
     <form onSubmit={(e) => handleSubmit(e, form.status)} style={styles.form}>
       {/* Notifications */}
-      {successMsg && <div style={styles.successBox}>{successMsg}</div>}
-      {error && <div style={styles.errorBox}>{error}</div>}
+      {displaySuccess && <div style={styles.successBox}>{displaySuccess}</div>}
+      {displayError && <div style={styles.errorBox}>⚠️ {displayError}</div>}
 
       {/* TOP SECTION: 2-Column Layout */}
       <div className="admin-form-grid">
