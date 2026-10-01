@@ -315,11 +315,45 @@ img {
   to { opacity: 1; }
 }
 
-/* ── Nav Search on Mobile ──────────────────────────── */
+/* ── Nav Search Collapsible & Responsive ───────────── */
+.nav-search-trigger {
+  transition: all 0.2s ease !important;
+}
+
+.nav-search-trigger:hover {
+  background: #ffffff !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+  transform: scale(1.04);
+}
+
+.nav-search-expanded {
+  animation: searchExpand 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes searchExpand {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-1px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 @media (max-width: 640px) {
-  .nav-search-wrap {
-    margin: 0 8px !important;
+  .nav-search-wrap.nav-search-expanded {
+    position: absolute !important;
+    left: 12px !important;
+    right: 12px !important;
     max-width: none !important;
+    margin: 0 !important;
+    z-index: 120 !important;
+    background: #ffffff !important;
+    border-radius: 24px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
   }
   .nav-search-wrap input::placeholder {
     font-size: 12px;
