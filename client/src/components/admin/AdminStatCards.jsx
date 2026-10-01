@@ -17,7 +17,7 @@ export default function AdminStatCards({ stats = {} }) {
     {
       title: 'TOTAL LEADS / INQUIRIES',
       value: safeStats.totalInquiries || 0,
-      subtext: '0 uncontacted leads',
+      subtext: `${safeStats.newLeads !== undefined ? safeStats.newLeads : 0} uncontacted leads`,
       subtextColor: '#d97706',
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

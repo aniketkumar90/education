@@ -29,6 +29,7 @@ export default function Sidebar() {
     admissionPlanning: '',
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
   useEffect(() => {
     axios.get('/api/blogs?limit=4')
@@ -51,10 +52,32 @@ export default function Sidebar() {
     }
   };
 
-  const handleAppSubmit = (e) => {
+  const handleAppSubmit = async (e) => {
     e.preventDefault();
-    if (appForm.name.trim() && appForm.phone.trim()) {
+    if (!appForm.name.trim() || !appForm.phone.trim()) {
+      alert('Please fill in your name and phone number.');
+      return;
+    }
+
+    setIsSubmittingLead(true);
+    try {
+      await axios.post('/api/inquiries', {
+        name: appForm.name.trim(),
+        phone: appForm.phone.trim(),
+        email: appForm.email.trim(),
+        studyMode: appForm.studyMode,
+        course: appForm.course,
+        subCourse: appForm.subCourse,
+        admissionPlanning: appForm.admissionPlanning,
+        source: 'Sidebar Admission Form',
+      });
       setFormSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit inquiry:', err);
+      const errorMsg = err.response?.data?.message || 'Failed to submit application. Please check your internet connection.';
+      alert(errorMsg);
+    } finally {
+      setIsSubmittingLead(false);
     }
   };
 
@@ -263,8 +286,16 @@ export default function Sidebar() {
               </select>
 
               {/* Submit button */}
-              <button type="submit" style={styles.submitBtn}>
-                Submit
+              <button
+                type="submit"
+                disabled={isSubmittingLead}
+                style={{
+                  ...styles.submitBtn,
+                  opacity: isSubmittingLead ? 0.75 : 1,
+                  cursor: isSubmittingLead ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSubmittingLead ? 'Submitting...' : 'Submit'}
               </button>
             </form>
           )}

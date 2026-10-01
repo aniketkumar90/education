@@ -145,12 +145,16 @@ const ensureDbConnected = async (req, res, next) => {
 // 3. Mount routes (supporting both with and without /api prefix for Vercel routing flexibility)
 const userRoutes = require('./routes/userRoutes');
 const blogRoutes = require('./routes/blogRoutes');
+const inquiryRoutes = require('./routes/inquiryRoutes');
 
 app.use('/api/auth', ensureDbConnected, userRoutes);
 app.use('/auth', ensureDbConnected, userRoutes);
 
 app.use('/api/blogs', ensureDbConnected, blogRoutes);
 app.use('/blogs', ensureDbConnected, blogRoutes);
+
+app.use('/api/inquiries', ensureDbConnected, inquiryRoutes);
+app.use('/inquiries', ensureDbConnected, inquiryRoutes);
 
 // 4. 404 & Error Handling
 app.use(notFound);

@@ -22,6 +22,14 @@ export default function Admin({ user, setUser }) {
   const [loading, setLoading] = useState(true);
   const [editingBlog, setEditingBlog] = useState(null);
 
+  const [inquiryStats, setInquiryStats] = useState({
+    total: 0,
+    new: 0,
+    contacted: 0,
+    qualified: 0,
+    enrolled: 0,
+  });
+
   // Default fallback user if not logged in
   const currentUser = user || {
     name: 'Admin',
@@ -29,10 +37,28 @@ export default function Admin({ user, setUser }) {
     role: 'admin',
   };
 
-  // Fetch blogs data
+  // Fetch blogs data and inquiry stats
   useEffect(() => {
     fetchBlogs();
+    fetchInquiryStats();
   }, []);
+
+  const fetchInquiryStats = async () => {
+    try {
+      const { data } = await axios.get('/api/inquiries/stats', { withCredentials: true });
+      if (data) {
+        setInquiryStats({
+          total: data.total || 0,
+          new: data.new || 0,
+          contacted: data.contacted || 0,
+          qualified: data.qualified || 0,
+          enrolled: data.enrolled || 0,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch inquiry stats:', err);
+    }
+  };
 
   const fetchBlogs = async () => {
     setLoading(true);
@@ -104,7 +130,8 @@ export default function Admin({ user, setUser }) {
     publishedBlogs: blogs.filter((b) => b.status !== 'Draft').length,
     universityCount: blogs.filter((b) => (b.category || '').toLowerCase().includes('univ')).length,
     coursesCount: blogs.filter((b) => (b.category || '').toLowerCase().includes('course')).length,
-    totalInquiries: 0,
+    totalInquiries: inquiryStats.total,
+    newLeads: inquiryStats.new,
     userCount: 1,
   };
 
@@ -168,7 +195,10 @@ export default function Admin({ user, setUser }) {
 
               {/* Two Column Grid: Recent Inquiries Table & Latest Articles Widget */}
               <div style={styles.dashboardTwoCol}>
-                <AdminInquiriesTable onViewAll={() => setActiveTab('inquiries')} />
+                <AdminInquiriesTable
+                  onViewAll={() => setActiveTab('inquiries')}
+                  onStatsUpdate={(s) => setInquiryStats((prev) => ({ ...prev, ...s }))}
+                />
                 <AdminLatestArticlesWidget
                   blogs={blogs}
                   onManage={() => setActiveTab('blogs')}
@@ -235,7 +265,10 @@ export default function Admin({ user, setUser }) {
           {/* TAB 4: INQUIRIES & LEADS */}
           {activeTab === 'inquiries' && (
             <div>
-              <AdminInquiriesTable />
+              <AdminInquiriesTable
+                isFullPage={true}
+                onStatsUpdate={(s) => setInquiryStats((prev) => ({ ...prev, ...s }))}
+              />
             </div>
           )}
 

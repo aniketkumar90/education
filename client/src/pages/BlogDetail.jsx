@@ -64,6 +64,7 @@ function ApplicationFormCard({
   formSubmitted,
   setAppForm,
   setFormSubmitted,
+  isSubmitting = false,
   onClose = null,
   isPopup = false,
   cardId = '',
@@ -235,8 +236,16 @@ function ApplicationFormCard({
             </select>
 
             {/* Submit button */}
-            <button type="submit" style={styles.submitBtn}>
-              Submit
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                ...styles.submitBtn,
+                opacity: isSubmitting ? 0.75 : 1,
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
           </form>
         )}
@@ -267,6 +276,7 @@ export default function BlogDetail() {
     admissionPlanning: '',
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
   // 3-Second Timed Admission Popup Modal
   useEffect(() => {
@@ -335,10 +345,33 @@ export default function BlogDetail() {
     }
   };
 
-  const handleAppSubmit = (e) => {
+  const handleAppSubmit = async (e) => {
     e.preventDefault();
-    if (appForm.name.trim() && appForm.phone.trim()) {
+    if (!appForm.name.trim() || !appForm.phone.trim()) {
+      alert('Please fill in your name and phone number.');
+      return;
+    }
+
+    setIsSubmittingLead(true);
+    try {
+      await axios.post('/api/inquiries', {
+        name: appForm.name.trim(),
+        phone: appForm.phone.trim(),
+        email: appForm.email.trim(),
+        studyMode: appForm.studyMode,
+        course: appForm.course,
+        subCourse: appForm.subCourse,
+        admissionPlanning: appForm.admissionPlanning,
+        source: blog?.title ? `Blog: ${blog.title}` : 'Blog Page Application Form',
+      });
       setFormSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit inquiry to backend:', err);
+      // Fallback: still show success to student so they don't get frustrated, or show alert
+      const errorMsg = err.response?.data?.message || 'Failed to submit application. Please check your internet connection.';
+      alert(errorMsg);
+    } finally {
+      setIsSubmittingLead(false);
     }
   };
 
@@ -456,6 +489,7 @@ export default function BlogDetail() {
                 formSubmitted={formSubmitted}
                 setAppForm={setAppForm}
                 setFormSubmitted={setFormSubmitted}
+                isSubmitting={isSubmittingLead}
                 cardId="in-article-application-form"
               />
             </div>
@@ -548,6 +582,7 @@ export default function BlogDetail() {
               formSubmitted={formSubmitted}
               setAppForm={setAppForm}
               setFormSubmitted={setFormSubmitted}
+              isSubmitting={isSubmittingLead}
               cardId="application-form"
             />
           </aside>
@@ -571,6 +606,7 @@ export default function BlogDetail() {
               formSubmitted={formSubmitted}
               setAppForm={setAppForm}
               setFormSubmitted={setFormSubmitted}
+              isSubmitting={isSubmittingLead}
               onClose={() => setShowPopup(false)}
               isPopup={true}
               cardId="popup-application-form"
