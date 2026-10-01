@@ -53,12 +53,208 @@ const splitContentForForm = (htmlContent) => {
   };
 };
 
+/**
+ * Reusable Application Form Card matching exact user screenshot design:
+ * Blue header (#253396), clean 1-column layout, +91 phone selector, and submit button.
+ */
+function ApplicationFormCard({
+  appForm,
+  handleAppChange,
+  handleAppSubmit,
+  formSubmitted,
+  setAppForm,
+  setFormSubmitted,
+  onClose = null,
+  isPopup = false,
+  cardId = '',
+}) {
+  return (
+    <div
+      id={cardId}
+      className={isPopup ? 'popup-application-card' : 'in-article-application-card'}
+      style={{
+        ...styles.appCard,
+        width: '100%',
+        maxWidth: isPopup ? 400 : 430,
+        margin: isPopup ? '0 auto' : '26px auto',
+        position: 'relative',
+      }}
+    >
+      {/* If popup, show close (✕) button in header */}
+      {isPopup && onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          style={styles.modalCloseBtn}
+          aria-label="Close form"
+          title="Close"
+        >
+          ✕
+        </button>
+      )}
+
+      {/* Header matching exact user screenshot */}
+      <div style={styles.appHeader}>
+        <h3 style={styles.appTitle}>Application Form</h3>
+        <p style={styles.appSubtitle}>Prospectus | Eligibility | Fees</p>
+      </div>
+
+      {/* Form Body */}
+      <div style={styles.appBody}>
+        {formSubmitted ? (
+          <div style={styles.appSuccess}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+            <h4 style={{ fontSize: 15, fontWeight: 700, color: '#166534', marginBottom: 6 }}>
+              Application Submitted!
+            </h4>
+            <p style={{ fontSize: 12, color: '#15803d', lineHeight: 1.5, marginBottom: 14 }}>
+              Thank you <strong>{appForm.name}</strong>. Our counselor will contact you shortly on <strong>+91 {appForm.phone}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setAppForm({ name: '', phone: '', email: '', studyMode: '', course: '', subCourse: '', admissionPlanning: '' });
+                setFormSubmitted(false);
+              }}
+              style={styles.newAppBtn}
+            >
+              Submit Another Query
+            </button>
+          </div>
+        ) : (
+          <form style={styles.appForm} onSubmit={handleAppSubmit}>
+            {/* YOUR NAME */}
+            <input
+              type="text"
+              name="name"
+              placeholder="YOUR NAME"
+              value={appForm.name}
+              onChange={handleAppChange}
+              required
+              style={styles.appInput}
+            />
+
+            {/* YOUR PHONE with flag */}
+            <div style={styles.phoneWrapper}>
+              <div style={styles.phonePrefix}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#1e293b' }}>IN</span>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: '#1e293b' }}>+91</span>
+                <span style={{ fontSize: 8, color: '#64748b' }}>▼</span>
+              </div>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="YOUR PHONE"
+                value={appForm.phone}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || /^[0-9]+$/.test(val)) {
+                    handleAppChange(e);
+                  }
+                }}
+                maxLength={10}
+                required
+                style={styles.phoneInput}
+              />
+            </div>
+
+            {/* YOUR EMAIL ID */}
+            <input
+              type="email"
+              name="email"
+              placeholder="YOUR EMAIL ID"
+              value={appForm.email}
+              onChange={handleAppChange}
+              required
+              style={styles.appInput}
+            />
+
+            {/* PREFERRED STUDY MODE */}
+            <select
+              name="studyMode"
+              value={appForm.studyMode}
+              onChange={handleAppChange}
+              required
+              style={styles.appSelect}
+            >
+              <option value="">PREFERRED STUDY MODE</option>
+              <option value="Distance Learning">Distance Learning</option>
+              <option value="Online Learning">Online Learning</option>
+              <option value="Regular / Campus">Regular / Campus</option>
+              <option value="Part-Time / Hybrid">Part-Time / Hybrid</option>
+            </select>
+
+            {/* SELECT COURSE */}
+            <select
+              name="course"
+              value={appForm.course}
+              onChange={handleAppChange}
+              required
+              style={styles.appSelect}
+            >
+              <option value="">SELECT COURSE</option>
+              {Object.keys(SPECIALIZATIONS).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            {/* SELECT SPECIALIZATION */}
+            <select
+              name="subCourse"
+              value={appForm.subCourse}
+              onChange={handleAppChange}
+              required
+              disabled={!appForm.course}
+              style={{
+                ...styles.appSelect,
+                opacity: appForm.course ? 1 : 0.65,
+                cursor: appForm.course ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <option value="">
+                {appForm.course ? 'SELECT SPECIALIZATION' : 'SELECT COURSE FIRST'}
+              </option>
+              {appForm.course && SPECIALIZATIONS[appForm.course]?.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+
+            {/* ADMISSION PLANNING */}
+            <select
+              name="admissionPlanning"
+              value={appForm.admissionPlanning}
+              onChange={handleAppChange}
+              required
+              style={styles.appSelect}
+            >
+              <option value="">ADMISSION PLANNING</option>
+              <option value="Immediate (2026 Batch)">Immediate (2026 Batch)</option>
+              <option value="Within 1 Month">Within 1 Month</option>
+              <option value="Within 3 Months">Within 3 Months</option>
+              <option value="Just Exploring Options">Just Exploring Options</option>
+            </select>
+
+            {/* Submit button */}
+            <button type="submit" style={styles.submitBtn}>
+              Submit
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Soft bottom accent */}
+      <div style={styles.appFooterAccent} />
+    </div>
+  );
+}
+
 export default function BlogDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [blog, setBlog] = useState(null);
   const [recentBlogs, setRecentBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
 
   // Application Form State matching Home page Sidebar
   const [appForm, setAppForm] = useState({
@@ -71,6 +267,28 @@ export default function BlogDetail() {
     admissionPlanning: '',
   });
   const [formSubmitted, setFormSubmitted] = useState(false);
+
+  // 3-Second Timed Admission Popup Modal
+  useEffect(() => {
+    setShowPopup(false);
+    const timer = setTimeout(() => {
+      setShowPopup(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [id]);
+
+  // Close popup modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowPopup(false);
+      }
+    };
+    if (showPopup) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showPopup]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -229,164 +447,17 @@ export default function BlogDetail() {
               />
             )}
 
-            {/* 2. In-Article Admission Enquiry & Application Form (Placed right after intro content) */}
-            <div id="in-article-form" className="in-article-form-wrap" style={styles.inArticleCard}>
-              <div style={styles.inArticleHeader}>
-                <div style={styles.inArticleBadgeWrap}>
-                  <span style={styles.inArticleBadge}>ADMISSION & COUNSELING 2026-27</span>
-                </div>
-                <h3 style={styles.inArticleTitle}>
-                  Admission Guidance & Application Form
-                </h3>
-                <p style={styles.inArticleSubtitle}>
-                  Get verified guidance on eligibility, fee structure, scholarship & direct admission process.
-                </p>
-              </div>
-
-              <div style={styles.inArticleBody}>
-                {formSubmitted ? (
-                  <div style={styles.appSuccess}>
-                    <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
-                    <h4 style={{ fontSize: 16, fontWeight: 700, color: '#166534', marginBottom: 6 }}>
-                      Application Query Submitted Successfully!
-                    </h4>
-                    <p style={{ fontSize: 13, color: '#15803d', lineHeight: 1.5, marginBottom: 14 }}>
-                      Thank you <strong>{appForm.name}</strong>. Our senior academic counselor will connect with you shortly on <strong>+91 {appForm.phone}</strong>.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAppForm({ name: '', phone: '', email: '', studyMode: '', course: '', subCourse: '', admissionPlanning: '' });
-                        setFormSubmitted(false);
-                      }}
-                      style={styles.newAppBtn}
-                    >
-                      Submit Another Query
-                    </button>
-                  </div>
-                ) : (
-                  <form style={styles.inArticleForm} onSubmit={handleAppSubmit}>
-                    <div className="in-article-grid">
-                      {/* YOUR NAME */}
-                      <input
-                        type="text"
-                        name="name"
-                        placeholder="YOUR NAME"
-                        value={appForm.name}
-                        onChange={handleAppChange}
-                        required
-                        style={styles.appInput}
-                      />
-
-                      {/* YOUR PHONE with flag */}
-                      <div style={styles.phoneWrapper}>
-                        <div style={styles.phonePrefix}>
-                          <span style={{ fontSize: 14 }}>🇮🇳</span>
-                          <span>+91</span>
-                          <span style={{ fontSize: 8, color: '#64748b' }}>▼</span>
-                        </div>
-                        <input
-                          type="tel"
-                          name="phone"
-                          placeholder="YOUR PHONE"
-                          value={appForm.phone}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            if (val === '' || /^[0-9]+$/.test(val)) {
-                              handleAppChange(e);
-                            }
-                          }}
-                          maxLength={10}
-                          required
-                          style={styles.phoneInput}
-                        />
-                      </div>
-
-                      {/* YOUR EMAIL ID */}
-                      <input
-                        type="email"
-                        name="email"
-                        placeholder="YOUR EMAIL ID"
-                        value={appForm.email}
-                        onChange={handleAppChange}
-                        required
-                        style={styles.appInput}
-                      />
-
-                      {/* PREFERRED STUDY MODE */}
-                      <select
-                        name="studyMode"
-                        value={appForm.studyMode}
-                        onChange={handleAppChange}
-                        required
-                        style={styles.appSelect}
-                      >
-                        <option value="">PREFERRED STUDY MODE</option>
-                        <option value="Distance Learning">Distance Learning</option>
-                        <option value="Online Learning">Online Learning</option>
-                        <option value="Regular / Campus">Regular / Campus</option>
-                        <option value="Part-Time / Hybrid">Part-Time / Hybrid</option>
-                      </select>
-
-                      {/* SELECT COURSE */}
-                      <select
-                        name="course"
-                        value={appForm.course}
-                        onChange={handleAppChange}
-                        required
-                        style={styles.appSelect}
-                      >
-                        <option value="">SELECT COURSE</option>
-                        {Object.keys(SPECIALIZATIONS).map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-
-                      {/* SELECT SPECIALIZATION */}
-                      <select
-                        name="subCourse"
-                        value={appForm.subCourse}
-                        onChange={handleAppChange}
-                        required
-                        disabled={!appForm.course}
-                        style={{
-                          ...styles.appSelect,
-                          opacity: appForm.course ? 1 : 0.65,
-                          cursor: appForm.course ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        <option value="">
-                          {appForm.course ? 'SELECT SPECIALIZATION' : 'SELECT COURSE FIRST'}
-                        </option>
-                        {appForm.course && SPECIALIZATIONS[appForm.course]?.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* ADMISSION PLANNING */}
-                    <select
-                      name="admissionPlanning"
-                      value={appForm.admissionPlanning}
-                      onChange={handleAppChange}
-                      required
-                      style={styles.appSelect}
-                    >
-                      <option value="">ADMISSION PLANNING</option>
-                      <option value="Immediate (2026 Batch)">Immediate (2026 Batch)</option>
-                      <option value="Within 1 Month">Within 1 Month</option>
-                      <option value="Within 3 Months">Within 3 Months</option>
-                      <option value="Just Exploring Options">Just Exploring Options</option>
-                    </select>
-
-                    {/* Submit button */}
-                    <button type="submit" style={styles.inArticleSubmitBtn}>
-                      Submit Application / Free Counseling →
-                    </button>
-                  </form>
-                )}
-              </div>
-              <div style={styles.appFooterAccent} />
+            {/* 2. In-Article Exact Application Form (matching user screenshot) */}
+            <div id="in-article-form" style={{ width: '100%', margin: '24px 0 30px 0' }}>
+              <ApplicationFormCard
+                appForm={appForm}
+                handleAppChange={handleAppChange}
+                handleAppSubmit={handleAppSubmit}
+                formSubmitted={formSubmitted}
+                setAppForm={setAppForm}
+                setFormSubmitted={setFormSubmitted}
+                cardId="in-article-application-form"
+              />
             </div>
 
             {/* 3. Remaining Article Body */}
@@ -469,164 +540,44 @@ export default function BlogDetail() {
               </div>
             </div>
 
-            {/* Box 2: Exact Application Form matching Home Page Sidebar */}
-            <div id="application-form" style={styles.appCard}>
-              {/* Header */}
-              <div style={styles.appHeader}>
-                <h3 style={styles.appTitle}>Application Form</h3>
-                <p style={styles.appSubtitle}>Prospectus | Eligibility | Fees</p>
-              </div>
-
-              {/* Form Body */}
-              <div style={styles.appBody}>
-                {formSubmitted ? (
-                  <div style={styles.appSuccess}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
-                    <h4 style={{ fontSize: 15, fontWeight: 700, color: '#166534', marginBottom: 6 }}>
-                      Application Submitted!
-                    </h4>
-                    <p style={{ fontSize: 12, color: '#15803d', lineHeight: 1.5, marginBottom: 14 }}>
-                      Thank you <strong>{appForm.name}</strong>. Our counselor will contact you shortly on <strong>+91 {appForm.phone}</strong>.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAppForm({ name: '', phone: '', email: '', studyMode: '', course: '', subCourse: '', admissionPlanning: '' });
-                        setFormSubmitted(false);
-                      }}
-                      style={styles.newAppBtn}
-                    >
-                      Submit Another Query
-                    </button>
-                  </div>
-                ) : (
-                  <form style={styles.appForm} onSubmit={handleAppSubmit}>
-                    {/* YOUR NAME */}
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="YOUR NAME"
-                      value={appForm.name}
-                      onChange={handleAppChange}
-                      required
-                      style={styles.appInput}
-                    />
-
-                    {/* YOUR PHONE with flag */}
-                    <div style={styles.phoneWrapper}>
-                      <div style={styles.phonePrefix}>
-                        <span style={{ fontSize: 14 }}>🇮🇳</span>
-                        <span>+91</span>
-                        <span style={{ fontSize: 8, color: '#64748b' }}>▼</span>
-                      </div>
-                      <input
-                        type="tel"
-                        name="phone"
-                        placeholder="YOUR PHONE"
-                        value={appForm.phone}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '' || /^[0-9]+$/.test(val)) {
-                            handleAppChange(e);
-                          }
-                        }}
-                        maxLength={10}
-                        required
-                        style={styles.phoneInput}
-                      />
-                    </div>
-
-                    {/* YOUR EMAIL ID */}
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="YOUR EMAIL ID"
-                      value={appForm.email}
-                      onChange={handleAppChange}
-                      required
-                      style={styles.appInput}
-                    />
-
-                    {/* PREFERRED STUDY MODE */}
-                    <select
-                      name="studyMode"
-                      value={appForm.studyMode}
-                      onChange={handleAppChange}
-                      required
-                      style={styles.appSelect}
-                    >
-                      <option value="">PREFERRED STUDY MODE</option>
-                      <option value="Distance Learning">Distance Learning</option>
-                      <option value="Online Learning">Online Learning</option>
-                      <option value="Regular / Campus">Regular / Campus</option>
-                      <option value="Part-Time / Hybrid">Part-Time / Hybrid</option>
-                    </select>
-
-                    {/* SELECT COURSE */}
-                    <select
-                      name="course"
-                      value={appForm.course}
-                      onChange={handleAppChange}
-                      required
-                      style={styles.appSelect}
-                    >
-                      <option value="">SELECT COURSE</option>
-                      {Object.keys(SPECIALIZATIONS).map((c) => (
-                        <option key={c} value={c}>{c.toUpperCase()}</option>
-                      ))}
-                    </select>
-
-                    {/* SELECT SUB-COURSE / SPECIALIZATION */}
-                    <select
-                      name="subCourse"
-                      value={appForm.subCourse}
-                      onChange={handleAppChange}
-                      required
-                      disabled={!appForm.course}
-                      style={{
-                        ...styles.appSelect,
-                        background: !appForm.course ? '#f8fafc' : '#ffffff',
-                        color: !appForm.course ? '#94a3b8' : '#1e293b',
-                        cursor: !appForm.course ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      <option value="">
-                        {appForm.course ? 'SELECT SPECIALIZATION' : 'SELECT COURSE FIRST'}
-                      </option>
-                      {appForm.course && SPECIALIZATIONS[appForm.course]?.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-
-                    {/* ADMISSION PLANNING */}
-                    <select
-                      name="admissionPlanning"
-                      value={appForm.admissionPlanning}
-                      onChange={handleAppChange}
-                      required
-                      style={styles.appSelect}
-                    >
-                      <option value="">ADMISSION PLANNING</option>
-                      <option value="Immediate (2026 Batch)">Immediate (2026 Batch)</option>
-                      <option value="Within 1 Month">Within 1 Month</option>
-                      <option value="Within 3 Months">Within 3 Months</option>
-                      <option value="Just Exploring Options">Just Exploring Options</option>
-                    </select>
-
-                    {/* Submit button */}
-                    <button type="submit" style={styles.submitBtn}>
-                      Submit
-                    </button>
-                  </form>
-                )}
-              </div>
-
-              {/* Soft bottom accent */}
-              <div style={styles.appFooterAccent} />
-            </div>
+            {/* Box 2: Application Form Sidebar Card */}
+            <ApplicationFormCard
+              appForm={appForm}
+              handleAppChange={handleAppChange}
+              handleAppSubmit={handleAppSubmit}
+              formSubmitted={formSubmitted}
+              setAppForm={setAppForm}
+              setFormSubmitted={setFormSubmitted}
+              cardId="application-form"
+            />
           </aside>
         </div>
       </div>
+
+      {/* 3-Second Timed Admission Popup Modal with Close (✕) Option */}
+      {showPopup && (
+        <div
+          className="app-modal-overlay animate-fadeIn"
+          style={styles.modalOverlay}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPopup(false);
+          }}
+        >
+          <div className="app-modal-dialog" style={styles.modalDialog}>
+            <ApplicationFormCard
+              appForm={appForm}
+              handleAppChange={handleAppChange}
+              handleAppSubmit={handleAppSubmit}
+              formSubmitted={formSubmitted}
+              setAppForm={setAppForm}
+              setFormSubmitted={setFormSubmitted}
+              onClose={() => setShowPopup(false)}
+              isPopup={true}
+              cardId="popup-application-form"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1063,66 +1014,45 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
   },
-  // In-Article Application Form Styles
-  inArticleCard: {
-    background: '#ffffff',
-    border: '2px solid #253396',
-    borderRadius: 14,
-    overflow: 'hidden',
-    boxShadow: '0 8px 30px rgba(37, 51, 150, 0.12)',
-    margin: '32px 0 36px 0',
-  },
-  inArticleHeader: {
-    background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
-    padding: '22px 24px',
-    textAlign: 'center',
-    color: '#ffffff',
-  },
-  inArticleBadgeWrap: {
-    marginBottom: 8,
-  },
-  inArticleBadge: {
-    fontSize: 10.5,
-    fontWeight: 800,
-    letterSpacing: 1.2,
-    color: '#f59e0b',
-    textTransform: 'uppercase',
-  },
-  inArticleTitle: {
-    fontSize: 20,
-    fontWeight: 800,
-    color: '#ffffff',
-    margin: '0 0 6px 0',
-    lineHeight: 1.3,
-  },
-  inArticleSubtitle: {
-    fontSize: 13,
-    color: '#cbd5e1',
-    margin: 0,
-    lineHeight: 1.45,
-  },
-  inArticleBody: {
-    padding: '24px 22px',
-    background: '#ffffff',
-  },
-  inArticleForm: {
+  // Modal Popup Styles
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1200,
+    background: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(4px)',
     display: 'flex',
-    flexDirection: 'column',
-    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '16px',
+    overflowY: 'auto',
   },
-  inArticleSubmitBtn: {
+  modalDialog: {
     width: '100%',
-    padding: '13px 18px',
-    background: 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)',
+    maxWidth: 410,
+    margin: 'auto',
+    animation: 'modalPop 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+  },
+  modalCloseBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    zIndex: 20,
+    background: 'rgba(255, 255, 255, 0.25)',
     color: '#ffffff',
     border: 'none',
-    borderRadius: 7,
-    fontSize: 14.5,
-    fontWeight: 800,
-    letterSpacing: 0.5,
+    borderRadius: '50%',
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
+    fontSize: 14,
+    fontWeight: 700,
     transition: 'all 0.15s ease',
-    marginTop: 4,
   },
 };
