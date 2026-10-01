@@ -570,4 +570,25 @@ img {
   transform: scale(1.08);
 }
 
+/* ── In-Article Application Form Full Content Width ─── */
+.in-article-application-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 28px 0 !important;
+}
+
+#in-article-form {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.popup-application-card {
+  width: 100% !important;
+  max-width: 410px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+
 

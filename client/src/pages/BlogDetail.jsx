@@ -76,9 +76,10 @@ function ApplicationFormCard({
       style={{
         ...styles.appCard,
         width: '100%',
-        maxWidth: isPopup ? 400 : 430,
-        margin: isPopup ? '0 auto' : '26px auto',
+        maxWidth: isPopup ? 410 : '100%',
+        margin: isPopup ? '0 auto' : '28px 0',
         position: 'relative',
+        boxSizing: 'border-box',
       }}
     >
       {/* If popup, show close (✕) button in header */}
