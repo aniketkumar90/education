@@ -6,7 +6,7 @@ const generateToken = require('../utils/generateToken');
 // @access  Public
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       res.status(400);
@@ -19,7 +19,8 @@ const register = async (req, res, next) => {
       return next(new Error('User with this email already exists'));
     }
 
-    const user = await User.create({ name, email, password, role: role || 'user' });
+    // Always create public registrations as 'user' role — admin role must be set directly in DB
+    const user = await User.create({ name, email, password, role: 'user' });
     const token = generateToken(res, user._id);
 
     res.status(201).json({
