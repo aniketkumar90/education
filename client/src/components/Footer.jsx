@@ -18,19 +18,6 @@ export default function Footer() {
               </div>
               <span style={styles.logoText}>DLEducation<span style={{ color: 'var(--primary)' }}>Connect</span></span>
             </Link>
-            <p style={styles.desc}>
-              A fast, SEO-optimized platform for education blogs covering MERN stack, Next.js, 
-              databases, UI/UX and more.
-            </p>
-            <div style={styles.socials}>
-              {[
-                { href: '#', label: 'Twitter', icon: 'X' },
-                { href: '#', label: 'GitHub', icon: 'G' },
-                { href: '#', label: 'LinkedIn', icon: 'in' },
-              ].map(({ href, label, icon }) => (
-                <a key={label} href={href} style={styles.social} aria-label={label}>{icon}</a>
-              ))}
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -56,16 +43,6 @@ export default function Footer() {
                   <Link to={`/blogs?category=${cat}`} style={styles.link}>{cat}</Link>
                 </li>
               ))}
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 style={styles.colTitle}>Contact</h4>
-            <ul style={styles.contactList}>
-              <li style={styles.contactItem}>📧 hello@dleducation.com</li>
-              <li style={styles.contactItem}>📍 New Delhi, India</li>
-              <li style={styles.contactItem}>🕐 Mon – Fri, 9am – 6pm IST</li>
             </ul>
           </div>
         </div>
@@ -108,18 +85,6 @@ const styles = {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
   logoText: { fontSize: 15, fontWeight: 700, color: '#f1f5f9' },
-  desc: { fontSize: 13.5, lineHeight: 1.7, color: '#64748b', maxWidth: 260 },
-  socials: { display: 'flex', gap: 10, marginTop: 18 },
-  social: {
-    width: 34, height: 34,
-    background: '#1e293b',
-    borderRadius: 8,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    color: '#94a3b8', textDecoration: 'none',
-    fontSize: 12, fontWeight: 700,
-    transition: 'all 0.2s ease',
-    border: '1px solid #334155',
-  },
   colTitle: {
     fontSize: 13, fontWeight: 700,
     color: '#f1f5f9', letterSpacing: '0.5px',
@@ -131,8 +96,6 @@ const styles = {
     textDecoration: 'none',
     transition: 'color 0.2s',
   },
-  contactList: { listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 },
-  contactItem: { fontSize: 13.5, color: '#64748b', lineHeight: 1.5 },
   bottom: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     flexWrap: 'wrap', gap: 12,
