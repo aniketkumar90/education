@@ -2,11 +2,76 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="DLEducationConnect - Fast, secure, and SEO-ready education blogs covering distance education, universities, and courses." />
-    <meta name="keywords" content="education, distance learning, university admissions, courses, education blog" />
-    <title>DLEducationConnect - Verified Education Blogs & University Updates</title>
+
+    <!-- Primary Favicon (PNG — required by Google for search result logo) -->
+    <link rel="icon" type="image/png" sizes="512x512" href="/logo-512.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo-512.png" />
+    <!-- SVG fallback for modern browsers -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Primary SEO Meta Tags -->
+    <title>DLEducationConnect - Verified Education Blogs &amp; University Updates</title>
+    <meta name="description" content="DLEducationConnect - Verified distance education blogs, university admission guides, and course updates. Get accurate info on fees, eligibility &amp; last dates." />
+    <meta name="keywords" content="distance education, university admissions, courses, education blog, DL education connect" />
+    <meta name="author" content="DLEducationConnect" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://dleducationconnect.in/" />
+
+    <!-- Open Graph (for social sharing & Google Knowledge Panel) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DLEducationConnect" />
+    <meta property="og:title" content="DLEducationConnect - Verified Education Blogs &amp; University Updates" />
+    <meta property="og:description" content="Verified distance education blogs, university admission guides, and course updates." />
+    <meta property="og:url" content="https://dleducationconnect.in/" />
+    <meta property="og:image" content="https://dleducationconnect.in/logo-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="DLEducationConnect Logo" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="DLEducationConnect" />
+    <meta name="twitter:description" content="Verified distance education blogs &amp; university updates." />
+    <meta name="twitter:image" content="https://dleducationconnect.in/logo-512.png" />
+
+    <!-- JSON-LD Organization Schema (tells Google which logo to show in search results) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "DLEducationConnect",
+      "url": "https://dleducationconnect.in",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dleducationconnect.in/logo-512.png",
+        "width": 512,
+        "height": 512
+      },
+      "description": "Verified distance education blogs, university admission guides, and course updates.",
+      "sameAs": [
+        "https://dleducationconnect.in"
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD WebSite Schema (enables Google Sitelinks Search) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "DLEducationConnect",
+      "url": "https://dleducationconnect.in",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://dleducationconnect.in/blogs?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
