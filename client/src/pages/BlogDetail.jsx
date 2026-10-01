@@ -335,19 +335,124 @@ export default function BlogDetail() {
     loadBlog();
   }, [id, navigate]);
 
-  // Dynamic SEO title & description
+  // ─── Comprehensive Per-Blog SEO Injection ────────────────────────────────
+  // Sets all meta/OG tags and JSON-LD Article schema dynamically per blog post
   useEffect(() => {
-    if (blog) {
-      document.title = `${blog.metaTitle || blog.title} | DLEducationConnect`;
-      let metaDesc = document.querySelector("meta[name='description']");
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta');
-        metaDesc.name = 'description';
-        document.head.appendChild(metaDesc);
+    if (!blog) return;
+
+    const siteUrl = 'https://dleducationconnect.in';
+    const blogUrl = `${siteUrl}/blog/${blog.slug || blog._id}`;
+    const imgUrl = (typeof blog.coverImage === 'object' ? blog.coverImage?.url : blog.coverImage)
+      || `${siteUrl}/logo-512.png`;
+    const title = `${blog.metaTitle || blog.title} | DLEducationConnect`;
+    const description = blog.metaDescription || blog.excerpt || '';
+    const publishDate = blog.publishDate || blog.createdAt;
+    const modifiedDate = blog.updatedAt || publishDate;
+    const authorName = blog.authorName || 'DLEducationConnect';
+    const keywords = Array.isArray(blog.tags) ? blog.tags.join(', ') : (blog.focusKeyword || '');
+
+    // Helper to set or create a meta tag
+    const setMeta = (selector, attr, attrVal, content) => {
+      let el = document.querySelector(selector);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, attrVal);
+        document.head.appendChild(el);
       }
-      metaDesc.content = blog.metaDescription || blog.excerpt || '';
+      el.setAttribute('content', content);
+    };
+
+    // Helper to set or create a link tag
+    const setLink = (rel, href) => {
+      let el = document.querySelector(`link[rel='${rel}']`);
+      if (!el) {
+        el = document.createElement('link');
+        el.setAttribute('rel', rel);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('href', href);
+    };
+
+    // 1. Title
+    document.title = title;
+
+    // 2. Standard meta
+    setMeta("meta[name='description']", 'name', 'description', description);
+    setMeta("meta[name='keywords']", 'name', 'keywords', keywords);
+    setMeta("meta[name='author']", 'name', 'author', authorName);
+    setMeta("meta[name='robots']", 'name', 'robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
+
+    // 3. Canonical URL
+    setLink('canonical', blogUrl);
+
+    // 4. Open Graph tags
+    setMeta("meta[property='og:type']", 'property', 'og:type', 'article');
+    setMeta("meta[property='og:title']", 'property', 'og:title', title);
+    setMeta("meta[property='og:description']", 'property', 'og:description', description);
+    setMeta("meta[property='og:url']", 'property', 'og:url', blogUrl);
+    setMeta("meta[property='og:image']", 'property', 'og:image', imgUrl);
+    setMeta("meta[property='og:image:alt']", 'property', 'og:image:alt', blog.imageAlt || blog.title);
+    setMeta("meta[property='og:site_name']", 'property', 'og:site_name', 'DLEducationConnect');
+    setMeta("meta[property='article:published_time']", 'property', 'article:published_time', new Date(publishDate).toISOString());
+    setMeta("meta[property='article:modified_time']", 'property', 'article:modified_time', new Date(modifiedDate).toISOString());
+    setMeta("meta[property='article:author']", 'property', 'article:author', authorName);
+    if (Array.isArray(blog.tags)) {
+      blog.tags.slice(0, 3).forEach((tag, i) => {
+        setMeta(`meta[property='article:tag'][data-idx='${i}']`, 'property', 'article:tag', tag);
+      });
     }
+
+    // 5. Twitter Card
+    setMeta("meta[name='twitter:card']", 'name', 'twitter:card', 'summary_large_image');
+    setMeta("meta[name='twitter:title']", 'name', 'twitter:title', title);
+    setMeta("meta[name='twitter:description']", 'name', 'twitter:description', description);
+    setMeta("meta[name='twitter:image']", 'name', 'twitter:image', imgUrl);
+
+    // 6. JSON-LD Article Schema (critical for Google ranking & rich results)
+    const existingSchema = document.getElementById('blog-article-schema');
+    if (existingSchema) existingSchema.remove();
+
+    const schema = document.createElement('script');
+    schema.type = 'application/ld+json';
+    schema.id = 'blog-article-schema';
+    schema.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: blog.title,
+      description: description,
+      image: imgUrl,
+      author: {
+        '@type': 'Person',
+        name: authorName,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'DLEducationConnect',
+        logo: {
+          '@type': 'ImageObject',
+          url: `${siteUrl}/logo-512.png`,
+        },
+      },
+      datePublished: new Date(publishDate).toISOString(),
+      dateModified: new Date(modifiedDate).toISOString(),
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': blogUrl,
+      },
+      url: blogUrl,
+      keywords: keywords,
+      articleSection: blog.category || 'Education',
+      inLanguage: 'en-IN',
+    });
+    document.head.appendChild(schema);
+
+    // 7. Cleanup on unmount
+    return () => {
+      const s = document.getElementById('blog-article-schema');
+      if (s) s.remove();
+    };
   }, [blog]);
+
 
   const handleAppChange = (e) => {
     const { name, value } = e.target;
