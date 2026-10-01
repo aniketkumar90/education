@@ -40,7 +40,11 @@ export default function BlogCard({ blog, index = 0 }) {
           {/* Top-left branding badge */}
           <div style={styles.brandBadge}>
             <span style={styles.brandIcon}>🎓</span>
-            <span style={styles.brandText}>{bannerData.tag || 'Education iConnect'}</span>
+            <span style={styles.brandText}>
+              {bannerData.tag && !bannerData.tag.toLowerCase().includes('iconnect')
+                ? bannerData.tag
+                : 'Education Connect'}
+            </span>
           </div>
 
           {/* Banner text overlay */}
