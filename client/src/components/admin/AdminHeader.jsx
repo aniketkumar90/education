@@ -1,12 +1,24 @@
 import { Link } from 'react-router-dom';
 
-export default function AdminHeader({ user, title, onAddNewPost }) {
+export default function AdminHeader({ user, title, onAddNewPost, onToggleSidebar }) {
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'A';
 
   return (
-    <header style={styles.header}>
+    <header className="admin-header" style={styles.header}>
       <div style={styles.left}>
-        <h1 style={styles.pageTitle}>{title || 'Dashboard Overview'}</h1>
+        <button
+          type="button"
+          className="admin-menu-toggle"
+          onClick={onToggleSidebar}
+          aria-label="Toggle navigation menu"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <h1 className="admin-page-title" style={styles.pageTitle}>{title || 'Dashboard Overview'}</h1>
       </div>
 
       <div style={styles.right}>
@@ -14,10 +26,11 @@ export default function AdminHeader({ user, title, onAddNewPost }) {
           <button
             type="button"
             onClick={onAddNewPost}
+            className="admin-header-add-btn"
             style={styles.addBtn}
           >
             <span style={{ fontSize: 16, fontWeight: 700 }}>+</span>
-            <span>Add New Post</span>
+            <span className="admin-add-btn-text">Add New Post</span>
           </button>
         )}
 
@@ -26,7 +39,7 @@ export default function AdminHeader({ user, title, onAddNewPost }) {
           <div style={styles.avatar}>
             {initial}
           </div>
-          <div style={styles.userInfo}>
+          <div className="admin-user-info" style={styles.userInfo}>
             <span style={styles.userName}>{user?.name || 'Admin'}</span>
             <span style={styles.userRole}>ADMIN</span>
           </div>

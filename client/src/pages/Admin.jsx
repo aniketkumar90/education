@@ -17,6 +17,7 @@ const CATEGORIES = ['University', 'Courses', 'SEO Basics', 'IT', 'Education', 'T
 export default function Admin({ user, setUser }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'blogs' | 'create-blog' | 'inquiries' | 'users' | 'profile'
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingBlog, setEditingBlog] = useState(null);
@@ -127,25 +128,31 @@ export default function Admin({ user, setUser }) {
   };
 
   return (
-    <div style={styles.layout}>
+    <div className="admin-layout" style={styles.layout}>
       {/* 1. Dark Navy Sidebar (matching SPM Admin Suite in screenshot) */}
       <AdminSidebar
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          setSidebarOpen(false);
+        }}
         onLogout={handleLogout}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       {/* 2. Main Content Area */}
-      <div style={styles.mainContainer}>
+      <div className="admin-main-container" style={styles.mainContainer}>
         {/* Top Header Bar */}
         <AdminHeader
           user={currentUser}
           title={getPageTitle()}
           onAddNewPost={handleAddNewPost}
+          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
         />
 
         {/* Scrollable View Area */}
-        <div style={styles.contentArea}>
+        <div className="admin-content-area" style={styles.contentArea}>
           {/* TAB 1: DASHBOARD OVERVIEW (Matches user screenshot exactly) */}
           {activeTab === 'dashboard' && (
             <div>
@@ -185,8 +192,8 @@ export default function Admin({ user, setUser }) {
 
           {/* TAB 3: ADD NEW POST (14 SEO Fields Form with Rich selection toolbar) */}
           {activeTab === 'create-blog' && (
-            <div style={styles.formContainer}>
-              <div style={styles.formHeader}>
+            <div className="admin-form-container" style={styles.formContainer}>
+              <div className="admin-form-header" style={styles.formHeader}>
                 <div>
                   <h2 style={styles.formTitle}>
                     {editingBlog ? '✏️ Edit Education Blog' : '📝 Add New SEO Education Blog'}

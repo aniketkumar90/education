@@ -129,14 +129,14 @@ export default function BlogDetail() {
       <div className="container" style={styles.mainContainer}>
         <div className="detail-layout-grid" style={styles.layoutGrid}>
           {/* LEFT COLUMN: Main Article Content */}
-          <article style={styles.mainArticle}>
+          <article className="blog-main-article" style={styles.mainArticle}>
             {/* Category Tag & Title */}
             <div style={styles.articleHeader}>
               <span style={styles.catPill}>{blog.category || 'Education'}</span>
               <h1 style={styles.postTitle}>{blog.title}</h1>
 
               {/* Meta Row: Author, Date, Views */}
-              <div style={styles.metaRow}>
+              <div className="detail-meta-row" style={styles.metaRow}>
                 <div style={styles.authorGroup}>
                   <div style={styles.authorAvatar}>
                     {(blog.authorName || 'A').charAt(0).toUpperCase()}
@@ -164,7 +164,7 @@ export default function BlogDetail() {
             </div>
 
             {/* Featured Hero Banner Image */}
-            <div style={styles.featuredImageWrap}>
+            <div className="featured-img-wrap" style={styles.featuredImageWrap}>
               <img
                 src={coverUrl}
                 alt={blog.imageAlt || blog.title}
@@ -207,7 +207,7 @@ export default function BlogDetail() {
             )}
 
             {/* Bottom Call to Action Card (SPM Advisory style) */}
-            <div style={styles.ctaBox}>
+            <div className="blog-cta-box" style={styles.ctaBox}>
               <div style={styles.ctaLeft}>
                 <span style={styles.ctaBadge}>ADMISSION & COUNSELING</span>
                 <h3 style={styles.ctaTitle}>Interested in exploring options mentioned in this article?</h3>

@@ -39,8 +39,8 @@ export default function MainContentSection({
       {/* 1. Top Box: Auto Generate URL bar + Blog Title */}
       <div style={styles.card}>
         {/* URL Bar matching the sketch: "Auto generate url   edit" */}
-        <div style={styles.urlBar}>
-          <div style={styles.urlDisplay}>
+        <div className="admin-url-bar" style={styles.urlBar}>
+          <div className="admin-url-display" style={styles.urlDisplay}>
             <span style={styles.urlLabel}>🌐 Permalink:</span>
             <span style={styles.urlDomain}>https://dleducationconnect.in/blog/</span>
             {isEditingSlug ? (
@@ -58,7 +58,7 @@ export default function MainContentSection({
             )}
           </div>
 
-          <div style={styles.urlActions}>
+          <div className="admin-url-actions" style={styles.urlActions}>
             <button
               type="button"
               onClick={onAutoSlug}

@@ -99,7 +99,7 @@ export default function RichContentEditor({ value, onChange }) {
   return (
     <div ref={containerRef} style={styles.container}>
       {/* Editor Header */}
-      <div style={styles.header}>
+      <div className="editor-header-bar" style={styles.header}>
         <div style={styles.headerLeft}>
           <label style={styles.label}>Blog content</label>
           <span style={styles.badge}>
@@ -110,7 +110,7 @@ export default function RichContentEditor({ value, onChange }) {
         <div style={styles.headerRight}>
           {/* Quick Static Toolbar */}
           {!isHtmlMode && (
-            <div style={styles.staticToolbar}>
+            <div className="editor-static-toolbar" style={styles.staticToolbar}>
               <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatBlock('<h2>')} style={styles.toolBtn}>H2</button>
               <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => formatBlock('<h3>')} style={styles.toolBtn}>H3</button>
               <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec('bold')} style={styles.toolBtn}><strong>B</strong></button>

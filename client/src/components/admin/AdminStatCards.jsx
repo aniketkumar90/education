@@ -59,7 +59,7 @@ export default function AdminStatCards({ stats = {} }) {
   ];
 
   return (
-    <div style={styles.grid}>
+    <div className="admin-stat-grid" style={styles.grid}>
       {cards.map((card, idx) => (
         <div key={idx} style={styles.card}>
           <div style={styles.cardTop}>

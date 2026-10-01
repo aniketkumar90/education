@@ -1,7 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 
-export default function AdminSidebar({ activeTab, onSelectTab, onLogout, collapsed, onToggleCollapse }) {
+export default function AdminSidebar({ activeTab, onSelectTab, onLogout, isOpen = false, onClose }) {
   const navigate = useNavigate();
+
+  const handleTabClick = (tabId) => {
+    onSelectTab(tabId);
+    if (onClose) onClose();
+  };
 
   const navItems = [
     {
@@ -72,35 +77,51 @@ export default function AdminSidebar({ activeTab, onSelectTab, onLogout, collaps
   ];
 
   return (
-    <aside style={styles.sidebar}>
-      {/* Brand Header */}
-      <div style={styles.brandHeader}>
-        <div style={styles.brandLogoBox}>
-          <div style={styles.brandIcon}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4" />
-            </svg>
+    <>
+      {isOpen && (
+        <div
+          className="admin-sidebar-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`admin-sidebar ${isOpen ? 'admin-sidebar-open' : ''}`} style={styles.sidebar}>
+        {/* Brand Header */}
+        <div style={styles.brandHeader}>
+          <div style={styles.brandLogoBox}>
+            <div style={styles.brandIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4" />
+              </svg>
+            </div>
+            <div>
+              <div style={styles.brandTitle}>EDUCATION</div>
+            </div>
           </div>
-          <div>
-            <div style={styles.brandTitle}>EDUCATION</div>
-          </div>
+          <button
+            type="button"
+            className="admin-sidebar-close"
+            onClick={onClose}
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
         </div>
-      </div>
 
-      {/* Navigation Links */}
-      <nav style={styles.nav}>
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onSelectTab(item.id)}
-              style={{
-                ...styles.navItem,
-                ...(isActive ? styles.navItemActive : styles.navItemInactive),
-              }}
-            >
+        {/* Navigation Links */}
+        <nav style={styles.nav}>
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleTabClick(item.id)}
+                style={{
+                  ...styles.navItem,
+                  ...(isActive ? styles.navItemActive : styles.navItemInactive),
+                }}
+              >
               <span style={{ ...styles.itemIcon, color: isActive ? '#0f172a' : '#94a3b8' }}>
                 {item.icon}
               </span>
@@ -144,6 +165,7 @@ export default function AdminSidebar({ activeTab, onSelectTab, onLogout, collaps
         </button>
       </div>
     </aside>
+  </>
   );
 }
 

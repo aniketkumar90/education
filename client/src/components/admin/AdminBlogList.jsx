@@ -181,9 +181,12 @@ const styles = {
   },
   tableWrap: {
     overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    width: '100%',
   },
   table: {
     width: '100%',
+    minWidth: 650,
     borderCollapse: 'collapse',
     textAlign: 'left',
   },
