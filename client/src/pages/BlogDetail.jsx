@@ -261,9 +261,23 @@ function ApplicationFormCard({
 export default function BlogDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [blog, setBlog] = useState(null);
+  // Check if server-side pre-rendered blog data is already available
+  const getInitialBlog = () => {
+    if (typeof window !== 'undefined' && window.__INITIAL_BLOG__) {
+      const init = window.__INITIAL_BLOG__;
+      const cleanId = (id || '').replace(/^\/?blog\/?/i, '').toLowerCase();
+      const initSlug = (init.slug || '').toLowerCase();
+      if (init._id === id || initSlug === cleanId || initSlug === id) {
+        return init;
+      }
+    }
+    return null;
+  };
+
+  const initialBlog = getInitialBlog();
+  const [blog, setBlog] = useState(initialBlog);
   const [recentBlogs, setRecentBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialBlog);
   const [showPopup, setShowPopup] = useState(false);
 
   // Application Form State matching Home page Sidebar
@@ -303,22 +317,29 @@ export default function BlogDetail() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    setLoading(true);
 
     const loadBlog = async () => {
+      const hasInitial = Boolean(initialBlog);
+      if (!hasInitial) {
+        setLoading(true);
+      }
+
       try {
-        // Load the current blog first
-        const { data: blogData } = await axios.get(`/api/blogs/${id}`);
-        setBlog(blogData);
+        // Load the current blog if not already populated from server pre-render
+        let currentBlogData = initialBlog;
+        if (!currentBlogData || (currentBlogData.slug !== id && currentBlogData._id !== id)) {
+          const { data: blogData } = await axios.get(`/api/blogs/${id}`);
+          currentBlogData = blogData;
+          setBlog(blogData);
+        }
 
         // Fetch recent articles — increase limit so we have enough after filtering
         const { data: listData } = await axios.get('/api/blogs?limit=10');
-        if (listData && listData.blogs) {
-          // Exclude current blog using its real _id AND slug (URL may be either)
+        if (listData && listData.blogs && currentBlogData) {
           const filtered = listData.blogs.filter(
             (b) =>
-              b._id !== blogData._id &&
-              b.slug !== blogData.slug &&
+              b._id !== currentBlogData._id &&
+              b.slug !== currentBlogData.slug &&
               b._id !== id &&
               b.slug !== id
           );
@@ -326,7 +347,10 @@ export default function BlogDetail() {
         }
       } catch (err) {
         console.error('Failed to load blog:', err);
-        setBlog(null);
+        // Only set blog to null if we didn't already have valid pre-rendered data
+        if (!hasInitial) {
+          setBlog(null);
+        }
       } finally {
         setLoading(false);
       }
