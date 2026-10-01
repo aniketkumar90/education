@@ -590,5 +590,32 @@ img {
   box-sizing: border-box !important;
 }
 
+/* ── Rich Text Editor Toolbar Interactive Styles ──── */
+.editor-permanent-toolbar button:hover,
+.floating-toolbar button:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+.editor-permanent-toolbar button:active {
+  transform: translateY(1px);
+}
+
+.rich-blog-body [style*="text-align: justify"],
+.rich-blog-body [align="justify"] {
+  text-align: justify !important;
+}
+
+.rich-blog-body [style*="text-align: center"],
+.rich-blog-body [align="center"] {
+  text-align: center !important;
+}
+
+.rich-blog-body [style*="text-align: right"],
+.rich-blog-body [align="right"] {
+  text-align: right !important;
+}
+
+
 
 
