@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 
-export default function AdminBlogList({ blogs, loading, onAddNewPost, onDeleteBlog, onToggleStatus, onEditBlog }) {
+export default function AdminBlogList({ blogs = [], loading, onAddNewPost, onDeleteBlog, onToggleStatus, onEditBlog }) {
+  const safeBlogs = Array.isArray(blogs) ? blogs.filter(Boolean) : [];
+
   return (
     <div style={styles.card}>
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>All Articles & Blog Posts ({blogs.length})</h2>
+          <h2 style={styles.title}>All Articles & Blog Posts ({safeBlogs.length})</h2>
           <p style={styles.subtitle}>
             Manage, edit, inspect SEO performance, or publish new education posts
           </p>
@@ -26,7 +28,7 @@ export default function AdminBlogList({ blogs, loading, onAddNewPost, onDeleteBl
             <div key={i} className="skeleton" style={{ height: 72, borderRadius: 10 }} />
           ))}
         </div>
-      ) : blogs.length === 0 ? (
+      ) : safeBlogs.length === 0 ? (
         <div style={styles.empty}>
           <span style={{ fontSize: 48 }}>📝</span>
           <p style={{ fontWeight: 600, color: '#334155', margin: '8px 0' }}>No blogs created yet</p>
@@ -51,7 +53,7 @@ export default function AdminBlogList({ blogs, loading, onAddNewPost, onDeleteBl
               </tr>
             </thead>
             <tbody>
-              {blogs.map((blog) => (
+              {safeBlogs.map((blog) => (
                 <tr key={blog._id} style={styles.tr}>
                   <td style={styles.td}>
                     <Link to={`/blog/${blog.slug || blog._id}`} style={styles.titleLink}>
@@ -92,7 +94,9 @@ export default function AdminBlogList({ blogs, loading, onAddNewPost, onDeleteBl
                     {blog.views || 0}
                   </td>
                   <td style={{ ...styles.td, color: '#94a3b8', fontSize: 12 }}>
-                    {new Date(blog.publishDate || blog.createdAt).toLocaleDateString()}
+                    {blog.publishDate || blog.createdAt
+                      ? new Date(blog.publishDate || blog.createdAt).toLocaleDateString()
+                      : 'Recent'}
                   </td>
                   <td style={{ ...styles.td, textAlign: 'right' }}>
                     <div style={styles.actionGroup}>

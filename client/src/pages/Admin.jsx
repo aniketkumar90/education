@@ -64,11 +64,11 @@ export default function Admin({ user, setUser }) {
     setLoading(true);
     try {
       const { data } = await axios.get('/api/blogs?status=all&limit=50', { withCredentials: true });
-      setBlogs(data.blogs || []);
+      setBlogs(Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : []);
     } catch (err) {
       console.error('Failed to fetch blogs from database:', err);
       setBlogs([]);
-      alert(err.response?.data?.message || 'Failed to fetch blogs from database.');
+      // Do not use blocking alert on background refresh
     } finally {
       setLoading(false);
     }
@@ -124,14 +124,15 @@ export default function Admin({ user, setUser }) {
     setActiveTab('create-blog');
   };
 
-  // Compute live stats
+  // Compute live stats safely
+  const safeBlogs = Array.isArray(blogs) ? blogs.filter(Boolean) : [];
   const stats = {
-    totalBlogs: blogs.length,
-    publishedBlogs: blogs.filter((b) => b.status !== 'Draft').length,
-    universityCount: blogs.filter((b) => (b.category || '').toLowerCase().includes('univ')).length,
-    coursesCount: blogs.filter((b) => (b.category || '').toLowerCase().includes('course')).length,
-    totalInquiries: inquiryStats.total,
-    newLeads: inquiryStats.new,
+    totalBlogs: safeBlogs.length,
+    publishedBlogs: safeBlogs.filter((b) => b && b.status !== 'Draft').length,
+    universityCount: safeBlogs.filter((b) => b && (b.category || '').toLowerCase().includes('univ')).length,
+    coursesCount: safeBlogs.filter((b) => b && (b.category || '').toLowerCase().includes('course')).length,
+    totalInquiries: inquiryStats?.total || 0,
+    newLeads: inquiryStats?.new || 0,
     userCount: 1,
   };
 

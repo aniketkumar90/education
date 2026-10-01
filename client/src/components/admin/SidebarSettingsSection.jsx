@@ -13,9 +13,20 @@ export default function SidebarSettingsSection({
 }) {
   const [imgMode, setImgMode] = useState('upload'); // 'upload' | 'url'
 
-  const previewSrc = coverImage
-    ? URL.createObjectURL(coverImage)
-    : featuredImageUrl || '';
+  let previewSrc = '';
+  if (coverImage instanceof Blob || (typeof File !== 'undefined' && coverImage instanceof File)) {
+    try {
+      previewSrc = URL.createObjectURL(coverImage);
+    } catch {
+      previewSrc = '';
+    }
+  } else if (typeof coverImage === 'string') {
+    previewSrc = coverImage;
+  } else if (coverImage && typeof coverImage === 'object' && coverImage.url) {
+    previewSrc = coverImage.url;
+  } else if (featuredImageUrl) {
+    previewSrc = featuredImageUrl;
+  }
 
   return (
     <div style={styles.container}>
@@ -69,7 +80,9 @@ export default function SidebarSettingsSection({
             <button
               type="button"
               disabled={submitting}
-              onClick={() => onSubmit('Published')}
+              onClick={() => {
+                if (typeof onSubmit === 'function') onSubmit('Published');
+              }}
               style={styles.publishBtn}
             >
               {submitting ? 'Saving...' : '🚀 Publish Post'}
@@ -77,7 +90,9 @@ export default function SidebarSettingsSection({
             <button
               type="button"
               disabled={submitting}
-              onClick={() => onSubmit('Draft')}
+              onClick={() => {
+                if (typeof onSubmit === 'function') onSubmit('Draft');
+              }}
               style={styles.draftBtn}
             >
               💾 Save Draft

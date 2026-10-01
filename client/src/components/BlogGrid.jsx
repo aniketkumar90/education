@@ -34,7 +34,7 @@ export default function BlogGrid() {
 
         const { data } = await axios.get('/api/blogs', { params });
         if (isMounted) {
-          setBlogs(data.blogs || []);
+          setBlogs(Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : []);
           setPages(data.pages || 1);
         }
       } catch (err) {

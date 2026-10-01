@@ -98,8 +98,18 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
     }));
   };
 
-  const handleSubmit = async (e, forcedStatus) => {
-    if (e) e.preventDefault();
+  const handleSubmit = async (eOrStatus, forcedStatus) => {
+    let targetStatus = form.status || 'Published';
+
+    if (eOrStatus && typeof eOrStatus.preventDefault === 'function') {
+      eOrStatus.preventDefault();
+      if (forcedStatus) targetStatus = forcedStatus;
+    } else if (typeof eOrStatus === 'string') {
+      targetStatus = eOrStatus;
+    } else if (forcedStatus) {
+      targetStatus = forcedStatus;
+    }
+
     setError('');
     setSuccessMsg('');
 
@@ -119,7 +129,6 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
     setSubmitting(true);
 
     try {
-      const targetStatus = forcedStatus || form.status || 'Published';
       const formData = new FormData();
 
       formData.append('title', form.title.trim());
@@ -169,16 +178,20 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       const msg = isDbEdit
         ? `💾 Blog post updated successfully! URL: /blog/${createdSlug}`
         : targetStatus === 'Draft'
-        ? `💾 Blog saved as Draft! (URL: /blog/${createdSlug})`
-        : `🚀 Blog published successfully! URL: /blog/${createdSlug}`;
+        ? `💾 Blog saved as Draft! (Note: Drafts are saved in Admin. URL: /blog/${createdSlug})`
+        : `🚀 Blog PUBLISHED live on website! URL: /blog/${createdSlug}`;
 
       setSuccessMsg(msg);
 
       setTimeout(() => {
-        if (onSuccess) onSuccess();
-      }, 1500);
+        try {
+          if (onSuccess) onSuccess();
+        } catch (callbackErr) {
+          console.error('onSuccess callback error:', callbackErr);
+        }
+      }, 1200);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to save blog:', err);
       const serverMsg = err.response?.data?.message || err.response?.data?.error || err.message;
       setError(serverMsg || 'Failed to save blog post. Please check backend connection.');
     } finally {

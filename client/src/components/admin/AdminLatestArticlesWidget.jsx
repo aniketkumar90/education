@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { getImageUrl } from '../../api/api';
 
 export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEditBlog }) {
-  const displayBlogs = blogs.slice(0, 4);
+  const safeBlogs = Array.isArray(blogs) ? blogs.filter(Boolean) : [];
+  const displayBlogs = safeBlogs.slice(0, 4);
 
   return (
     <div style={styles.card}>
@@ -10,7 +11,7 @@ export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEdit
         <h3 style={styles.title}>Latest Articles</h3>
         {onManage && (
           <button type="button" onClick={onManage} style={styles.manageBtn}>
-            Manage ({blogs.length}) →
+            Manage ({safeBlogs.length}) →
           </button>
         )}
       </div>

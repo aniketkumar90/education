@@ -8,6 +8,7 @@ import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Sub-component to manage whether Navbar/Footer should show on Admin page if desired
 function AppContent({ user, setUser, authLoading }) {
@@ -66,8 +67,10 @@ export default function App() {
   }, []);
 
   return (
-    <Router>
-      <AppContent user={user} setUser={setUser} authLoading={authLoading} />
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AppContent user={user} setUser={setUser} authLoading={authLoading} />
+      </Router>
+    </ErrorBoundary>
   );
 }
