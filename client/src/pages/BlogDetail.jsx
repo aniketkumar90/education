@@ -305,22 +305,34 @@ export default function BlogDetail() {
     window.scrollTo(0, 0);
     setLoading(true);
 
-    axios
-      .get(`/api/blogs/${id}`)
-      .then(({ data }) => {
-        setBlog(data);
-        return axios.get('/api/blogs?limit=6');
-      })
-      .then(({ data }) => {
-        if (data && data.blogs) {
-          setRecentBlogs(data.blogs.filter((b) => b._id !== id && b.slug !== id).slice(0, 4));
+    const loadBlog = async () => {
+      try {
+        // Load the current blog first
+        const { data: blogData } = await axios.get(`/api/blogs/${id}`);
+        setBlog(blogData);
+
+        // Fetch recent articles — increase limit so we have enough after filtering
+        const { data: listData } = await axios.get('/api/blogs?limit=10');
+        if (listData && listData.blogs) {
+          // Exclude current blog using its real _id AND slug (URL may be either)
+          const filtered = listData.blogs.filter(
+            (b) =>
+              b._id !== blogData._id &&
+              b.slug !== blogData.slug &&
+              b._id !== id &&
+              b.slug !== id
+          );
+          setRecentBlogs(filtered.slice(0, 4));
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('Failed to load blog:', err);
         setBlog(null);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBlog();
   }, [id, navigate]);
 
   // Dynamic SEO title & description
@@ -444,13 +456,6 @@ export default function BlogDetail() {
                   <span style={styles.metaLabel}>Published</span>
                   <span style={styles.metaValue}>{formatDate(blog.publishDate || blog.createdAt)}</span>
                 </div>
-
-                <div style={styles.metaDivider} />
-
-                <div style={styles.metaItem}>
-                  <span style={styles.metaLabel}>Views</span>
-                  <span style={styles.metaValue}>👁 {blog.views || 1420}</span>
-                </div>
               </div>
             </div>
 
@@ -506,40 +511,7 @@ export default function BlogDetail() {
               />
             )}
 
-            {/* Tags Strip */}
-            {blog.tags && blog.tags.length > 0 && (
-              <div style={styles.tagsContainer}>
-                <span style={styles.tagsLabel}>Tags:</span>
-                <div style={styles.tagsWrap}>
-                  {blog.tags.map((t) => (
-                    <Link
-                      key={t}
-                      to={`/blogs?search=${encodeURIComponent(t)}`}
-                      style={styles.tagBadge}
-                    >
-                      #{t}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Bottom Call to Action Card (SPM Advisory style) */}
-            <div className="blog-cta-box" style={styles.ctaBox}>
-              <div style={styles.ctaLeft}>
-                <span style={styles.ctaBadge}>ADMISSION & COUNSELING</span>
-                <h3 style={styles.ctaTitle}>Interested in exploring options mentioned in this article?</h3>
-                <p style={styles.ctaDesc}>
-                  Connect directly with verified admission counselors for fee structure, eligibility & scholarship guidance.
-                </p>
-              </div>
-              <a
-                href="#in-article-form"
-                style={styles.ctaBtn}
-              >
-                Connect with Advisory Team →
-              </a>
-            </div>
           </article>
 
           {/* RIGHT COLUMN: Sidebar (Matching SPM Insights Right Rail) */}
