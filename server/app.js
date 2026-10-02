@@ -243,7 +243,6 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
         <h1 style="font-size:32px;font-weight:800;color:#0f172a;line-height:1.25;margin:0 0 16px 0;">${blog.title}</h1>
         <div style="font-size:14px;color:#64748b;margin-bottom:24px;">By <strong>${authorName}</strong> • Published ${new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
         <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:14px;margin-bottom:28px;" />
-        ${blog.excerpt ? `<div style="padding:16px 20px;background:#f8fafc;border-left:4px solid #2563eb;border-radius:6px;margin-bottom:28px;font-size:15px;color:#334155;">${blog.excerpt}</div>` : ''}
         <div class="blog-rich-content" style="font-size:16px;color:#334155;">
           ${blog.content || ''}
         </div>
