@@ -82,7 +82,7 @@ export default function Admin({ user, setUser }) {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     try {
-      const { data } = await axios.get('/api/blogs?status=all&limit=50', { withCredentials: true, headers });
+      const { data } = await axios.get('/api/blogs?status=all&limit=200', { withCredentials: true, headers });
       setBlogs(Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : []);
     } catch (err) {
       console.error('Failed to fetch blogs from database:', err);

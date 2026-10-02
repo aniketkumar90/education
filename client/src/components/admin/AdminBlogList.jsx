@@ -1,27 +1,203 @@
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-export default function AdminBlogList({ blogs = [], loading, onAddNewPost, onDeleteBlog, onToggleStatus, onEditBlog }) {
-  const safeBlogs = Array.isArray(blogs) ? blogs.filter(Boolean) : [];
+export default function AdminBlogList({
+  blogs = [],
+  loading,
+  onAddNewPost,
+  onDeleteBlog,
+  onToggleStatus,
+  onEditBlog,
+}) {
+  const [search, setSearch] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('ALL'); // 'ALL' | 'Published' | 'Draft'
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
+
+  const safeBlogs = useMemo(() => (Array.isArray(blogs) ? blogs.filter(Boolean) : []), [blogs]);
+
+  // Extract unique sorted categories
+  const categories = useMemo(() => {
+    const set = new Set();
+    safeBlogs.forEach((b) => {
+      if (b.category && b.category.trim()) set.add(b.category.trim());
+    });
+    return Array.from(set).sort();
+  }, [safeBlogs]);
+
+  // Filter blogs based on search query, status, and category
+  const filteredBlogs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return safeBlogs.filter((blog) => {
+      // 1. Status Filter
+      if (selectedStatus !== 'ALL') {
+        const isDraft = blog.status === 'Draft';
+        if (selectedStatus === 'Draft' && !isDraft) return false;
+        if (selectedStatus === 'Published' && isDraft) return false;
+      }
+
+      // 2. Category Filter
+      if (selectedCategory !== 'ALL') {
+        if ((blog.category || '').trim().toLowerCase() !== selectedCategory.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // 3. Search Query Filter
+      if (!q) return true;
+
+      const titleMatch = (blog.title || '').toLowerCase().includes(q);
+      const keywordMatch = (blog.focusKeyword || '').toLowerCase().includes(q);
+      const categoryMatch = (blog.category || '').toLowerCase().includes(q);
+      const slugMatch = (blog.slug || '').toLowerCase().includes(q);
+      const authorMatch = (blog.authorName || '').toLowerCase().includes(q);
+      const tagsMatch =
+        Array.isArray(blog.tags) && blog.tags.some((t) => (t || '').toLowerCase().includes(q));
+
+      return titleMatch || keywordMatch || categoryMatch || slugMatch || authorMatch || tagsMatch;
+    });
+  }, [safeBlogs, search, selectedStatus, selectedCategory]);
+
+  const publishedCount = useMemo(
+    () => safeBlogs.filter((b) => b.status !== 'Draft').length,
+    [safeBlogs]
+  );
+  const draftCount = safeBlogs.length - publishedCount;
+  const isFiltered = Boolean(search.trim() || selectedStatus !== 'ALL' || selectedCategory !== 'ALL');
 
   return (
     <div style={styles.card}>
+      {/* Header */}
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>All Articles & Blog Posts ({safeBlogs.length})</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h2 style={styles.title}>All Articles & Blog Posts</h2>
+            <span style={styles.countBadge}>{safeBlogs.length} Total</span>
+          </div>
           <p style={styles.subtitle}>
-            Manage, edit, inspect SEO performance, or publish new education posts
+            Manage, edit, search, inspect SEO performance, or publish new education posts
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onAddNewPost}
-          style={styles.addBtn}
-        >
+        <button type="button" onClick={onAddNewPost} style={styles.addBtn}>
           <span>+</span>
           <span>Add New Post</span>
         </button>
       </div>
 
+      {/* Search and Filters Bar */}
+      <div style={styles.filterBar}>
+        {/* Search Input Box */}
+        <div style={styles.searchBox}>
+          <span style={{ color: '#94a3b8', fontSize: 14 }}>🔍</span>
+          <input
+            type="text"
+            placeholder="Search articles by title, keyword, slug, author, category..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={styles.searchInput}
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              title="Clear search"
+              style={styles.clearSearchBtn}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Category Dropdown Filter */}
+        {categories.length > 0 && (
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={styles.categorySelect}
+          >
+            <option value="ALL">All Categories ({categories.length})</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* Status Filter Tabs */}
+        <div style={styles.statusTabs}>
+          <button
+            type="button"
+            onClick={() => setSelectedStatus('ALL')}
+            style={{
+              ...styles.statusTab,
+              background: selectedStatus === 'ALL' ? '#0f172a' : '#f1f5f9',
+              color: selectedStatus === 'ALL' ? '#ffffff' : '#475569',
+            }}
+          >
+            All ({safeBlogs.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedStatus('Published')}
+            style={{
+              ...styles.statusTab,
+              background: selectedStatus === 'Published' ? '#15803d' : '#f1f5f9',
+              color: selectedStatus === 'Published' ? '#ffffff' : '#475569',
+            }}
+          >
+            🟢 Published ({publishedCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedStatus('Draft')}
+            style={{
+              ...styles.statusTab,
+              background: selectedStatus === 'Draft' ? '#b45309' : '#f1f5f9',
+              color: selectedStatus === 'Draft' ? '#ffffff' : '#475569',
+            }}
+          >
+            🟡 Draft ({draftCount})
+          </button>
+        </div>
+      </div>
+
+      {/* Showing Results Info Bar when filter/search active */}
+      {isFiltered && (
+        <div style={styles.resultsInfoRow}>
+          <span style={styles.resultsCountText}>
+            Showing <strong>{filteredBlogs.length}</strong> of <strong>{safeBlogs.length}</strong> articles
+            {search.trim() && (
+              <span>
+                {' '}matching "<em>{search.trim()}</em>"
+              </span>
+            )}
+            {selectedCategory !== 'ALL' && (
+              <span>
+                {' '}in <strong>{selectedCategory}</strong>
+              </span>
+            )}
+            {selectedStatus !== 'ALL' && (
+              <span>
+                {' '}with status <strong>{selectedStatus}</strong>
+              </span>
+            )}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setSearch('');
+              setSelectedStatus('ALL');
+              setSelectedCategory('ALL');
+            }}
+            style={styles.resetFiltersBtn}
+          >
+            Clear Filters ✕
+          </button>
+        </div>
+      )}
+
+      {/* Table Content or Loading/Empty State */}
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[1, 2, 3].map((i) => (
@@ -39,6 +215,27 @@ export default function AdminBlogList({ blogs = [], loading, onAddNewPost, onDel
             Create First Blog
           </button>
         </div>
+      ) : filteredBlogs.length === 0 ? (
+        <div style={styles.empty}>
+          <span style={{ fontSize: 44 }}>🔍</span>
+          <p style={{ fontWeight: 700, color: '#334155', margin: '8px 0', fontSize: 15 }}>
+            No articles found matching "{search}"
+          </p>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, maxWidth: 380, textAlign: 'center' }}>
+            Try adjusting your search terms or clearing status/category filters to see all articles.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearch('');
+              setSelectedStatus('ALL');
+              setSelectedCategory('ALL');
+            }}
+            style={styles.clearSearchActionButton}
+          >
+            Clear Search & Filters
+          </button>
+        </div>
       ) : (
         <div style={styles.tableWrap}>
           <table style={styles.table}>
@@ -53,7 +250,7 @@ export default function AdminBlogList({ blogs = [], loading, onAddNewPost, onDel
               </tr>
             </thead>
             <tbody>
-              {safeBlogs.map((blog) => (
+              {filteredBlogs.map((blog) => (
                 <tr key={blog._id} style={styles.tr}>
                   <td style={styles.td}>
                     <Link to={`/blog/${blog.slug || blog._id}`} style={styles.titleLink}>
@@ -61,15 +258,9 @@ export default function AdminBlogList({ blogs = [], loading, onAddNewPost, onDel
                     </Link>
                     <div style={styles.badgeRow}>
                       {blog.focusKeyword && (
-                        <span style={styles.keywordBadge}>
-                          🎯 {blog.focusKeyword}
-                        </span>
+                        <span style={styles.keywordBadge}>🎯 {blog.focusKeyword}</span>
                       )}
-                      {blog.slug && (
-                        <span style={styles.slugBadge}>
-                          /{blog.slug}
-                        </span>
-                      )}
+                      {blog.slug && <span style={styles.slugBadge}>/{blog.slug}</span>}
                     </div>
                   </td>
                   <td style={styles.td}>
@@ -164,6 +355,14 @@ const styles = {
     color: '#0f172a',
     margin: 0,
   },
+  countBadge: {
+    fontSize: 11.5,
+    fontWeight: 700,
+    background: '#f1f5f9',
+    color: '#475569',
+    padding: '3px 9px',
+    borderRadius: 12,
+  },
   subtitle: {
     fontSize: 13,
     color: '#64748b',
@@ -182,6 +381,106 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.15s ease',
+  },
+  filterBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    flexWrap: 'wrap',
+  },
+  searchBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: 8,
+    padding: '7px 14px',
+    minWidth: 280,
+    flex: 1,
+    transition: 'border-color 0.15s ease',
+  },
+  searchInput: {
+    border: 'none',
+    background: 'transparent',
+    outline: 'none',
+    fontSize: 13,
+    width: '100%',
+    color: '#0f172a',
+    fontFamily: 'inherit',
+  },
+  clearSearchBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#94a3b8',
+    cursor: 'pointer',
+    padding: '0 4px',
+    fontSize: 13,
+    lineHeight: 1,
+  },
+  categorySelect: {
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: 8,
+    padding: '7px 12px',
+    fontSize: 12.5,
+    fontWeight: 600,
+    color: '#334155',
+    cursor: 'pointer',
+    outline: 'none',
+  },
+  statusTabs: {
+    display: 'flex',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  statusTab: {
+    border: 'none',
+    padding: '6px 12px',
+    borderRadius: 7,
+    fontSize: 11.5,
+    fontWeight: 700,
+    cursor: 'pointer',
+    letterSpacing: 0.3,
+    transition: 'all 0.15s ease',
+  },
+  resultsInfoRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    background: '#f8fafc',
+    border: '1px solid #f1f5f9',
+    borderRadius: 8,
+    padding: '8px 14px',
+    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  resultsCountText: {
+    fontSize: 12.5,
+    color: '#64748b',
+  },
+  resetFiltersBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#2563eb',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    padding: 0,
+  },
+  clearSearchActionButton: {
+    background: '#0f172a',
+    color: '#ffffff',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: 7,
+    fontSize: 12.5,
+    fontWeight: 600,
+    cursor: 'pointer',
+    marginTop: 6,
   },
   tableWrap: {
     overflowX: 'auto',
