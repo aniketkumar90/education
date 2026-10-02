@@ -626,7 +626,7 @@ export default function BlogDetail() {
             {/* Category Tag & Title */}
             <div style={styles.articleHeader}>
               <span style={styles.catPill}>{blog.category || 'Education'}</span>
-              <h1 style={styles.postTitle}>{blog.title}</h1>
+              <h1 className="blog-main-title" style={styles.postTitle}>{blog.title}</h1>
 
               {/* Meta Row: Author, Date, Views */}
               <div className="detail-meta-row" style={styles.metaRow}>
@@ -824,6 +824,8 @@ const styles = {
     lineHeight: 1.25,
     letterSpacing: '-0.5px',
     marginBottom: 20,
+    textAlign: 'justify',
+    textJustify: 'inter-word',
   },
   metaRow: {
     display: 'flex',

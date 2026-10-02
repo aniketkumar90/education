@@ -238,6 +238,21 @@ input, textarea, select {
 }
 
 /* ── Rich Blog Body Styling ─────────────────────────── */
+.blog-main-title {
+  text-align: justify !important;
+  text-justify: inter-word;
+}
+
+.rich-blog-body h1,
+.rich-blog-body h2,
+.rich-blog-body h3,
+.rich-blog-body h4,
+.rich-blog-body h5,
+.rich-blog-body h6 {
+  text-align: justify !important;
+  text-justify: inter-word;
+}
+
 .rich-blog-body h2 {
   font-size: 22px;
   font-weight: 800;
