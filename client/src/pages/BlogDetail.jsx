@@ -16,39 +16,98 @@ const SPECIALIZATIONS = {
 };
 
 /**
- * Splits HTML blog content right after the first heading and its initial ~5-line introductory paragraph,
- * so the admission & counseling inquiry form can be dynamically inserted right where users need it.
+ * Splits HTML blog content after ~5 lines of introductory content (approx 180-450 characters / 1st paragraph),
+ * whether on mobile (phone view) or desktop (web view), for all existing and new blogs.
  */
 const splitContentForForm = (htmlContent) => {
-  if (!htmlContent) return { before: '', after: '' };
+  if (!htmlContent || typeof htmlContent !== 'string') {
+    return { before: '', after: '' };
+  }
 
-  // 1. Find the first heading (h2 or h3) and locate the closing </p> of the paragraph directly below it
-  const headingMatch = htmlContent.search(/<h[23][^>]*>/i);
-  if (headingMatch !== -1) {
-    const afterHeading = htmlContent.slice(headingMatch);
-    const pEndIndex = afterHeading.indexOf('</p>');
-    if (pEndIndex !== -1) {
-      const splitPoint = headingMatch + pEndIndex + 4; // after </p>
+  const trimmed = htmlContent.trim();
+  if (!trimmed) {
+    return { before: '', after: '' };
+  }
+
+  const stripTags = (str) => str.replace(/<[^>]*>/g, '').trim();
+
+  // Pattern 1: Content has <p> tags
+  const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let match;
+  let accumulatedText = '';
+  let splitIndex = -1;
+  let pCount = 0;
+
+  while ((match = pRegex.exec(trimmed)) !== null) {
+    pCount++;
+    const pFullMatch = match[0];
+    const pEnd = match.index + pFullMatch.length;
+    const pText = stripTags(pFullMatch);
+    accumulatedText += (accumulatedText ? ' ' : '') + pText;
+
+    // If first paragraph is substantial (>= 180 chars, i.e., ~5 lines on mobile/desktop),
+    // or accumulated text reaches ~220 chars, or 2 paragraphs have passed
+    if (pText.length >= 180 || accumulatedText.length >= 220 || pCount >= 2) {
+      splitIndex = pEnd;
+      break;
+    }
+
+    splitIndex = pEnd;
+  }
+
+  if (splitIndex !== -1 && splitIndex < trimmed.length) {
+    return {
+      before: trimmed.slice(0, splitIndex),
+      after: trimmed.slice(splitIndex),
+    };
+  }
+
+  // Pattern 2: Content has double <br> line breaks
+  const doubleBrRegex = /<br\s*\/?>\s*<br\s*\/?>/gi;
+  let brMatch;
+  while ((brMatch = doubleBrRegex.exec(trimmed)) !== null) {
+    const brEnd = brMatch.index + brMatch[0].length;
+    const textBefore = stripTags(trimmed.slice(0, brEnd));
+    if (textBefore.length >= 180) {
       return {
-        before: htmlContent.slice(0, splitPoint),
-        after: htmlContent.slice(splitPoint),
+        before: trimmed.slice(0, brEnd),
+        after: trimmed.slice(brEnd),
       };
     }
   }
 
-  // 2. Fallback: if no heading + </p> pattern, split after the first closing </p>
-  const firstP = htmlContent.indexOf('</p>');
-  if (firstP !== -1) {
-    const splitPoint = firstP + 4;
-    return {
-      before: htmlContent.slice(0, splitPoint),
-      after: htmlContent.slice(splitPoint),
-    };
+  // Pattern 3: Content has <div> tags
+  const divRegex = /<div[^>]*>([\s\S]*?)<\/div>/gi;
+  let divMatch;
+  accumulatedText = '';
+  while ((divMatch = divRegex.exec(trimmed)) !== null) {
+    const divEnd = divMatch.index + divMatch[0].length;
+    accumulatedText += ' ' + stripTags(divMatch[0]);
+    if (accumulatedText.length >= 180) {
+      return {
+        before: trimmed.slice(0, divEnd),
+        after: trimmed.slice(divEnd),
+      };
+    }
   }
 
-  // 3. Fallback: entire content if no paragraph tags
+  // Pattern 4: Plain text / no HTML tags — split after first sentence or around ~250-400 chars (~5 lines)
+  const plainText = stripTags(trimmed);
+  if (plainText.length > 250) {
+    const searchSlice = trimmed.slice(180, 500);
+    const sentenceEnd = searchSlice.search(/[.!?]\s+|\n+/);
+    if (sentenceEnd !== -1) {
+      const point = 180 + sentenceEnd + 1;
+      return {
+        before: trimmed.slice(0, point),
+        after: trimmed.slice(point),
+      };
+    }
+  }
+
+  // Fallback: if very short content, keep in before and show form
   return {
-    before: htmlContent,
+    before: trimmed,
     after: '',
   };
 };
