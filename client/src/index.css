@@ -239,18 +239,20 @@ input, textarea, select {
 
 /* ── Rich Blog Body Styling ─────────────────────────── */
 .blog-main-title {
-  text-align: justify !important;
-  text-justify: inter-word;
+  text-align: left !important;
+  color: #007380 !important;
+  font-weight: 800;
+  line-height: 1.3;
 }
 
-.rich-blog-body h1,
-.rich-blog-body h2,
-.rich-blog-body h3,
-.rich-blog-body h4,
-.rich-blog-body h5,
-.rich-blog-body h6 {
-  text-align: justify !important;
-  text-justify: inter-word;
+.blog-byline-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: #1e293b;
+  margin-bottom: 18px;
 }
 
 .rich-blog-body h2 {

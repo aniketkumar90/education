@@ -4,7 +4,7 @@ import axios from 'axios';
 import { getImageUrl } from '../api/api';
 
 const formatDate = (d) =>
-  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
 const SPECIALIZATIONS = {
   'Management': ['MBA - General Management', 'MBA - Finance', 'MBA - Marketing', 'MBA - Human Resource', 'BBA - Business Administration'],
@@ -623,29 +623,15 @@ export default function BlogDetail() {
         <div className="detail-layout-grid" style={styles.layoutGrid}>
           {/* LEFT COLUMN: Main Article Content */}
           <article className="blog-main-article" style={styles.mainArticle}>
-            {/* Category Tag & Title */}
+            {/* Article Header matching user reference */}
             <div style={styles.articleHeader}>
-              <span style={styles.catPill}>{blog.category || 'Education'}</span>
               <h1 className="blog-main-title" style={styles.postTitle}>{blog.title}</h1>
 
-              {/* Meta Row: Author, Date, Views */}
-              <div className="detail-meta-row" style={styles.metaRow}>
-                <div style={styles.authorGroup}>
-                  <div style={styles.authorAvatar}>
-                    {(blog.authorName || 'A').charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <span style={styles.authorName}>{blog.authorName || 'Aniket Kumar'}</span>
-                    <span style={styles.authorRole}>Senior Academic Advisor</span>
-                  </div>
-                </div>
-
-                <div style={styles.metaDivider} />
-
-                <div style={styles.metaItem}>
-                  <span style={styles.metaLabel}>Published</span>
-                  <span style={styles.metaValue}>{formatDate(blog.publishDate || blog.createdAt)}</span>
-                </div>
+              {/* Clean Byline: By Author / Updated on Date */}
+              <div className="blog-byline-row" style={styles.bylineRow}>
+                <span>By <span style={styles.bylineAuthor}>{blog.authorName || 'Tabrez'}</span></span>
+                <span style={styles.bylineSlash}>/</span>
+                <span>Updated on {formatDate(blog.publishDate || blog.createdAt)}</span>
               </div>
             </div>
 
@@ -803,98 +789,46 @@ const styles = {
     boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
   },
   articleHeader: {
-    marginBottom: 24,
-  },
-  catPill: {
-    display: 'inline-block',
-    background: 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)',
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: 800,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    padding: '4px 12px',
-    borderRadius: 20,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   postTitle: {
-    fontSize: 'clamp(24px, 3.2vw, 36px)',
+    fontSize: 'clamp(24px, 3.2vw, 34px)',
     fontWeight: 800,
-    color: '#0f172a',
-    lineHeight: 1.25,
-    letterSpacing: '-0.5px',
-    marginBottom: 20,
-    textAlign: 'justify',
-    textJustify: 'inter-word',
+    color: '#007380',
+    lineHeight: 1.3,
+    letterSpacing: '-0.3px',
+    marginBottom: 10,
+    textAlign: 'left',
   },
-  metaRow: {
+  bylineRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 8,
     flexWrap: 'wrap',
-    paddingTop: 16,
-    borderTop: '1px solid #f1f5f9',
-  },
-  authorGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-  },
-  authorAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: '50%',
-    background: '#0f172a',
-    color: '#ffffff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 700,
-    fontSize: 14,
-  },
-  authorName: {
     fontSize: 13.5,
-    fontWeight: 700,
-    color: '#0f172a',
-    display: 'block',
+    color: '#1e293b',
+    marginBottom: 18,
   },
-  authorRole: {
-    fontSize: 11,
-    color: '#64748b',
-    display: 'block',
-  },
-  metaDivider: {
-    width: 1,
-    height: 24,
-    background: '#e2e8f0',
-  },
-  metaItem: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  metaLabel: {
-    fontSize: 10.5,
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    fontWeight: 700,
-    letterSpacing: 0.5,
-  },
-  metaValue: {
-    fontSize: 12.5,
+  bylineAuthor: {
+    color: '#007380',
     fontWeight: 600,
-    color: '#334155',
+  },
+  bylineSlash: {
+    color: '#64748b',
+    margin: '0 2px',
   },
   featuredImageWrap: {
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: 'hidden',
-    height: 420,
-    background: '#0f172a',
-    marginBottom: 32,
+    marginBottom: 26,
   },
   featuredImg: {
     width: '100%',
-    height: '100%',
+    height: 'auto',
+    maxHeight: 480,
     objectFit: 'cover',
+    display: 'block',
+    borderRadius: 8,
   },
   excerptBox: {
     background: '#f8fafc',

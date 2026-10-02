@@ -238,11 +238,9 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
     });
 
     const preRenderedBody = `
-      <article style="max-width:920px;margin:24px auto;padding:24px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.75;color:#1e293b;">
-        <span style="display:inline-block;padding:4px 14px;background:#eff6ff;color:#2563eb;font-weight:700;font-size:13px;border-radius:20px;margin-bottom:12px;">${blog.category || 'Education'}</span>
-        <h1 style="font-size:32px;font-weight:800;color:#0f172a;line-height:1.25;margin:0 0 16px 0;text-align:justify;text-justify:inter-word;">${blog.title}</h1>
-        <div style="font-size:14px;color:#64748b;margin-bottom:24px;">By <strong>${authorName}</strong> • Published ${new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
-        <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:14px;margin-bottom:28px;" />
+        <h1 style="font-size:32px;font-weight:800;color:#007380;line-height:1.3;margin:0 0 10px 0;text-align:left;">${blog.title}</h1>
+        <div style="font-size:14px;color:#1e293b;margin-bottom:18px;">By <span style="color:#007380;font-weight:600;">${authorName}</span> / Updated on ${new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+        <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:8px;margin-bottom:24px;display:block;" />
         <div class="blog-rich-content" style="font-size:16px;color:#334155;">
           ${blog.content || ''}
         </div>
