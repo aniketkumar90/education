@@ -794,7 +794,7 @@ const styles = {
   postTitle: {
     fontSize: 'clamp(24px, 3.2vw, 34px)',
     fontWeight: 800,
-    color: '#007380',
+    color: '#0f172a',
     lineHeight: 1.3,
     letterSpacing: '-0.3px',
     marginBottom: 10,
@@ -806,12 +806,12 @@ const styles = {
     gap: 8,
     flexWrap: 'wrap',
     fontSize: 13.5,
-    color: '#1e293b',
+    color: '#64748b',
     marginBottom: 18,
   },
   bylineAuthor: {
-    color: '#007380',
-    fontWeight: 600,
+    color: '#0f172a',
+    fontWeight: 700,
   },
   bylineSlash: {
     color: '#64748b',
