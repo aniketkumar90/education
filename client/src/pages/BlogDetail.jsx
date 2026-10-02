@@ -599,12 +599,6 @@ export default function BlogDetail() {
               />
             </div>
 
-            {/* Excerpt Callout Box */}
-            {blog.excerpt && (
-              <div style={styles.excerptBox}>
-                <p style={styles.excerptText}>{blog.excerpt}</p>
-              </div>
-            )}
 
             {/* 1. Article Intro: First heading + initial ~5 lines of content */}
             {contentBeforeForm && (
