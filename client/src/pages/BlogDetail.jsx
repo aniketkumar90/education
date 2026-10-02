@@ -126,6 +126,7 @@ function ApplicationFormCard({
   isSubmitting = false,
   onClose = null,
   isPopup = false,
+  showCloseBtn = true,
   cardId = '',
 }) {
   return (
@@ -141,8 +142,8 @@ function ApplicationFormCard({
         boxSizing: 'border-box',
       }}
     >
-      {/* If popup, show close (✕) button in header */}
-      {isPopup && onClose && (
+      {/* If popup, show close (✕) button in header after delay */}
+      {isPopup && onClose && showCloseBtn && (
         <button
           type="button"
           onClick={onClose}
@@ -338,6 +339,7 @@ export default function BlogDetail() {
   const [recentBlogs, setRecentBlogs] = useState([]);
   const [loading, setLoading] = useState(!initialBlog);
   const [showPopup, setShowPopup] = useState(false);
+  const [canClosePopup, setCanClosePopup] = useState(false);
 
   // Application Form State matching Home page Sidebar
   const [appForm, setAppForm] = useState({
@@ -352,29 +354,43 @@ export default function BlogDetail() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
-  // 5-Second Timed Admission Popup Modal (only triggers 5 seconds after blog content is visible)
+  // 10-Second Timed Admission Popup Modal (only triggers 10 seconds after blog content is visible)
   useEffect(() => {
     setShowPopup(false);
+    setCanClosePopup(false);
     if (!blog || loading) return;
 
     const timer = setTimeout(() => {
       setShowPopup(true);
-    }, 5000);
+    }, 10000);
     return () => clearTimeout(timer);
   }, [id, Boolean(blog), loading]);
 
-  // Close popup modal on Escape key press
+  // Reveal popup close (✕) cut button 3 seconds after popup appears
+  useEffect(() => {
+    if (showPopup) {
+      setCanClosePopup(false);
+      const closeTimer = setTimeout(() => {
+        setCanClosePopup(true);
+      }, 3000);
+      return () => clearTimeout(closeTimer);
+    } else {
+      setCanClosePopup(false);
+    }
+  }, [showPopup]);
+
+  // Close popup modal on Escape key press (only after close option becomes active)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && canClosePopup) {
         setShowPopup(false);
       }
     };
-    if (showPopup) {
+    if (showPopup && canClosePopup) {
       document.addEventListener('keydown', handleKeyDown);
     }
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showPopup]);
+  }, [showPopup, canClosePopup]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -732,13 +748,13 @@ export default function BlogDetail() {
         </div>
       </div>
 
-      {/* 3-Second Timed Admission Popup Modal with Close (✕) Option */}
+      {/* 10-Second Timed Admission Popup Modal with delayed Close (✕) Button */}
       {showPopup && (
         <div
           className="app-modal-overlay animate-fadeIn"
           style={styles.modalOverlay}
           onClick={(e) => {
-            if (e.target === e.currentTarget) setShowPopup(false);
+            if (e.target === e.currentTarget && canClosePopup) setShowPopup(false);
           }}
         >
           <div className="app-modal-dialog" style={styles.modalDialog}>
@@ -752,6 +768,7 @@ export default function BlogDetail() {
               isSubmitting={isSubmittingLead}
               onClose={() => setShowPopup(false)}
               isPopup={true}
+              showCloseBtn={canClosePopup}
               cardId="popup-application-form"
             />
           </div>
@@ -1183,5 +1200,6 @@ const styles = {
     fontSize: 14,
     fontWeight: 700,
     transition: 'all 0.15s ease',
+    animation: 'modalPop 0.22s ease forwards',
   },
 };
