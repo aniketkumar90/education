@@ -237,13 +237,47 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
       inLanguage: 'en-IN',
     });
 
+    // Fetch recent published blogs to create a strong internal linking network for Googlebot
+    const recentBlogs = await Blog.find(
+      {
+        _id: { $ne: blog._id },
+        $or: [{ status: 'Published' }, { published: true }],
+      },
+      'title slug _id excerpt publishDate createdAt'
+    )
+      .sort({ publishDate: -1, createdAt: -1 })
+      .limit(6)
+      .lean();
+
+    const recentLinksHtml =
+      recentBlogs && recentBlogs.length > 0
+        ? `
+      <section style="margin-top:40px;padding-top:24px;border-top:2px solid #e2e8f0;">
+        <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:16px;">Latest Education Guides &amp; University Updates</h2>
+        <ul style="list-style:disc;padding-left:22px;line-height:2.2;font-size:16px;">
+          ${recentBlogs
+            .map(
+              (rb) => `
+            <li>
+              <a href="/blog/${rb.slug || rb._id}" style="color:#2563eb;text-decoration:underline;font-weight:600;">
+                ${rb.title}
+              </a>
+            </li>`
+            )
+            .join('')}
+        </ul>
+      </section>`
+        : '';
+
     const preRenderedBody = `
+      <article style="max-width:860px;margin:30px auto;padding:0 20px;">
         <h1 style="font-size:32px;font-weight:800;color:#0f172a;line-height:1.3;margin:0 0 10px 0;text-align:left;">${blog.title}</h1>
         <div style="font-size:14px;color:#64748b;margin-bottom:18px;">By <strong style="color:#0f172a;">${authorName}</strong> / Updated on ${new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
         <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:8px;margin-bottom:24px;display:block;" />
         <div class="blog-rich-content" style="font-size:16px;color:#334155;">
           ${blog.content || ''}
         </div>
+        ${recentLinksHtml}
       </article>
     `;
 
@@ -301,8 +335,10 @@ app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
     const Blog = require('./models/blogModel');
     const blogs = await Blog.find(
       { $or: [{ status: 'Published' }, { published: true }] },
-      'slug _id updatedAt createdAt title'
-    ).lean();
+      'slug _id updatedAt createdAt title coverImage'
+    )
+      .sort({ createdAt: -1, updatedAt: -1 })
+      .lean();
 
     const siteUrl = 'https://dleducationconnect.in';
     const today = new Date().toISOString().split('T')[0];
@@ -313,14 +349,19 @@ app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
       { url: `${siteUrl}/login`, priority: '0.3', changefreq: 'monthly' },
     ];
 
-    const blogUrls = blogs.map((b) => ({
-      url: `${siteUrl}/blog/${b.slug || b._id}`,
-      priority: '0.8',
-      changefreq: 'weekly',
-      lastmod: b.updatedAt
-        ? new Date(b.updatedAt).toISOString().split('T')[0]
-        : today,
-    }));
+    const blogUrls = blogs.map((b) => {
+      const cover = typeof b.coverImage === 'object' ? b.coverImage?.url : b.coverImage;
+      return {
+        url: `${siteUrl}/blog/${b.slug || b._id}`,
+        priority: '0.8',
+        changefreq: 'weekly',
+        lastmod: b.updatedAt
+          ? new Date(b.updatedAt).toISOString().split('T')[0]
+          : today,
+        imageUrl: cover || null,
+        title: b.title || '',
+      };
+    });
 
     const allUrls = [...staticPages, ...blogUrls];
 
@@ -333,7 +374,11 @@ ${allUrls
     <loc>${u.url}</loc>
     <lastmod>${u.lastmod || today}</lastmod>
     <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
+    <priority>${u.priority}</priority>${
+      u.imageUrl
+        ? `\n    <image:image>\n      <image:loc>${u.imageUrl}</image:loc>\n      <image:title>${u.title.replace(/[<>&'"]/g, '')}</image:title>\n    </image:image>`
+        : ''
+    }
   </url>`
   )
   .join('\n')}
@@ -347,6 +392,58 @@ ${allUrls
   }
 });
 
+// 4.5 RSS Feed for Instant Google & Search Engine Updates
+app.get(['/rss.xml', '/feed.xml', '/api/rss.xml'], async (req, res) => {
+  try {
+    await connectDB();
+    const Blog = require('./models/blogModel');
+    const blogs = await Blog.find(
+      { $or: [{ status: 'Published' }, { published: true }] }
+    )
+      .sort({ publishDate: -1, createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    const siteUrl = 'https://dleducationconnect.in';
+    const rssItems = blogs
+      .map((b) => {
+        const bUrl = `${siteUrl}/blog/${b.slug || b._id}`;
+        const pubDate = new Date(b.publishDate || b.createdAt).toUTCString();
+        const safeTitle = (b.title || '').replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
+        const safeDesc = (b.excerpt || b.metaDescription || '').replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
+        const category = (b.category || 'Education').replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
+        return `    <item>
+      <title>${safeTitle}</title>
+      <link>${bUrl}</link>
+      <guid isPermaLink="true">${bUrl}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description>${safeDesc}</description>
+      <category>${category}</category>
+    </item>`;
+      })
+      .join('\n');
+
+    const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>DLEducationConnect - Education Blogs &amp; University Admissions</title>
+    <link>${siteUrl}</link>
+    <description>Verified distance education blogs, university admission guides, and course updates.</description>
+    <language>en-IN</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+${rssItems}
+  </channel>
+</rss>`;
+
+    res.set('Content-Type', 'application/xml; charset=utf-8');
+    res.set('Cache-Control', 'public, max-age=1800');
+    res.send(rssXml);
+  } catch (err) {
+    res.status(500).send('<?xml version="1.0"?><rss version="2.0"><channel><title>DLEducationConnect</title></channel></rss>');
+  }
+});
+
 // 5. Robots.txt — tells Google crawlers what to index
 app.get('/robots.txt', (req, res) => {
   res.set('Content-Type', 'text/plain');
@@ -357,6 +454,7 @@ Disallow: /login
 Disallow: /api/
 
 Sitemap: https://dleducationconnect.in/sitemap.xml
+Sitemap: https://dleducationconnect.in/rss.xml
 `);
 });
 

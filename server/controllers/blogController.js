@@ -2,6 +2,39 @@ const mongoose = require('mongoose');
 const Blog = require('../models/blogModel');
 const { uploadToCloudinary, isCloudinaryConfigured } = require('../middleware/upload');
 const cloudinary = require('../config/cloudinary');
+const https = require('https');
+
+// Instant crawl alert for Search Engines (Bing, Yandex, IndexNow partner networks)
+const notifyIndexNow = (slug) => {
+  try {
+    const siteUrl = 'https://dleducationconnect.in';
+    const postUrl = `${siteUrl}/blog/${slug}`;
+    const payload = JSON.stringify({
+      host: 'dleducationconnect.in',
+      key: 'dleducationconnect2026',
+      keyLocation: 'https://dleducationconnect.in/dleducationconnect2026.txt',
+      urlList: [postUrl],
+    });
+
+    const req = https.request(
+      'https://api.indexnow.org/indexnow',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+        timeout: 4000,
+      },
+      () => {}
+    );
+    req.on('error', () => {});
+    req.write(payload);
+    req.end();
+  } catch (e) {
+    // Non-blocking background call
+  }
+};
 
 // @desc    Get all blogs (with pagination, category & search filtering, draft safety)
 // @route   GET /api/blogs
@@ -182,6 +215,11 @@ const createBlog = async (req, res, next) => {
     });
 
     const populated = await blog.populate('author', 'name avatar');
+
+    if (isPublished) {
+      notifyIndexNow(finalSlug);
+    }
+
     res.status(201).json(populated);
   } catch (error) {
     next(error);
@@ -284,6 +322,11 @@ const updateBlog = async (req, res, next) => {
 
     const updated = await blog.save();
     const populated = await updated.populate('author', 'name avatar');
+
+    if (updated.published || updated.status === 'Published') {
+      notifyIndexNow(updated.slug);
+    }
+
     res.json(populated);
   } catch (error) {
     next(error);
