@@ -11,12 +11,12 @@
     {
       "source": "/blog/kashmir-university-distance-education-2",
       "destination": "/blog/kashmir-university-distance-education",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/blogs/kashmir-university-distance-education-2",
       "destination": "/blog/kashmir-university-distance-education",
-      "permanent": true
+      "statusCode": 301
     }
   ],
   "rewrites": [
