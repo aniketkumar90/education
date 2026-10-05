@@ -643,11 +643,11 @@ export default function BlogDetail() {
             <div style={styles.articleHeader}>
               <h1 className="blog-main-title" style={styles.postTitle}>{blog.title}</h1>
 
-              {/* Clean Byline: By Author / Updated on Date */}
+              {/* Clean Byline: By Author / Date */}
               <div className="blog-byline-row" style={styles.bylineRow}>
-                <span>By <span style={styles.bylineAuthor}>{blog.authorName || 'Tabrez'}</span></span>
+                <span>By <span style={styles.bylineAuthor}>{blog.authorName || 'Aniket Kumar'}</span></span>
                 <span style={styles.bylineSlash}>/</span>
-                <span>Updated on {formatDate(blog.publishDate || blog.createdAt)}</span>
+                <span>{formatDate(blog.publishDate || blog.createdAt)}</span>
               </div>
             </div>
 
