@@ -29,7 +29,8 @@ const HIGHLIGHT_COLORS = [
 ];
 
 const TEXT_COLORS = [
-  { name: 'Default Dark', color: '#0f172a' },
+  { name: 'Pure Black', color: '#000000' },
+  { name: 'Default Dark', color: '#111827' },
   { name: 'Royal Blue', color: '#2563eb' },
   { name: 'Crimson Red', color: '#dc2626' },
   { name: 'Emerald Green', color: '#16a34a' },
@@ -914,9 +915,9 @@ const styles = {
     minHeight: 520,
     padding: '20px 24px',
     outline: 'none',
-    fontSize: 15,
-    lineHeight: 1.75,
-    color: '#1e293b',
+    fontSize: 16,
+    lineHeight: 1.8,
+    color: '#111827',
     background: '#ffffff',
     cursor: 'text',
     boxSizing: 'border-box',

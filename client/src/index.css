@@ -255,46 +255,87 @@ input, textarea, select {
   margin-bottom: 18px;
 }
 
+.rich-blog-body {
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: -0.01em;
+}
+
+.rich-blog-body h1,
+.rich-blog-body h2,
+.rich-blog-body h3,
+.rich-blog-body h4,
+.rich-blog-body h5,
+.rich-blog-body h6 {
+  color: #000000 !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 .rich-blog-body h2 {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 28px 0 12px;
+  font-size: 24px;
+  font-weight: 750;
+  color: #000000 !important;
+  margin: 34px 0 14px;
   line-height: 1.35;
 }
 
 .rich-blog-body h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000 !important;
+  margin: 26px 0 12px;
+  line-height: 1.4;
+}
+
+.rich-blog-body h4 {
   font-size: 18px;
   font-weight: 700;
-  color: #1e293b;
+  color: #000000 !important;
   margin: 22px 0 10px;
   line-height: 1.4;
 }
 
 .rich-blog-body p {
-  margin-bottom: 16px;
-  line-height: 1.75;
-  color: #334155;
+  margin-bottom: 18px;
+  line-height: 1.8;
+  color: #111827;
+  font-size: 16px;
+}
+
+.rich-blog-body strong,
+.rich-blog-body b {
+  color: #000000 !important;
+  font-weight: 700;
 }
 
 .rich-blog-body ul, .rich-blog-body ol {
-  margin: 14px 0 18px 24px;
+  margin: 14px 0 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  color: #111827;
 }
 
 .rich-blog-body li {
-  line-height: 1.65;
-  color: #334155;
+  line-height: 1.75;
+  color: #111827;
+  font-size: 16px;
+}
+
+.rich-blog-body li strong,
+.rich-blog-body li b {
+  color: #000000 !important;
+  font-weight: 700;
 }
 
 .rich-blog-body blockquote {
   border-left: 4px solid var(--primary);
-  padding: 12px 18px;
-  margin: 20px 0;
+  padding: 14px 20px;
+  margin: 24px 0;
   background: #f8fafc;
-  color: #475569;
+  color: #111827;
   font-style: italic;
   border-radius: 0 8px 8px 0;
 }
@@ -303,6 +344,7 @@ input, textarea, select {
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 2px;
+  font-weight: 500;
 }
 
 .rich-blog-body img {
@@ -310,6 +352,29 @@ input, textarea, select {
   height: auto;
   border-radius: 8px;
   margin: 16px 0;
+}
+
+.rich-blog-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  color: #111827;
+}
+
+.rich-blog-body th {
+  background: #f8fafc;
+  color: #000000;
+  font-weight: 700;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.rich-blog-body td {
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  color: #111827;
+  font-size: 15px;
 }
 
 /* ══════════════════════════════════════════════════════

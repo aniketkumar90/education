@@ -811,7 +811,7 @@ const styles = {
   postTitle: {
     fontSize: 'clamp(24px, 3.2vw, 34px)',
     fontWeight: 800,
-    color: '#0f172a',
+    color: '#000000',
     lineHeight: 1.3,
     letterSpacing: '-0.3px',
     marginBottom: 10,
@@ -827,7 +827,7 @@ const styles = {
     marginBottom: 18,
   },
   bylineAuthor: {
-    color: '#0f172a',
+    color: '#000000',
     fontWeight: 700,
   },
   bylineSlash: {
@@ -857,14 +857,14 @@ const styles = {
   excerptText: {
     fontSize: 16,
     lineHeight: 1.65,
-    color: '#334155',
+    color: '#111827',
     margin: 0,
     fontWeight: 500,
   },
   articleBody: {
     fontSize: 16,
     lineHeight: 1.8,
-    color: '#1e293b',
+    color: '#111827',
     marginBottom: 36,
   },
   tagsContainer: {
