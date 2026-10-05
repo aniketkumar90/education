@@ -156,6 +156,14 @@ app.use('/blogs', ensureDbConnected, blogRoutes);
 app.use('/api/inquiries', ensureDbConnected, inquiryRoutes);
 app.use('/inquiries', ensureDbConnected, inquiryRoutes);
 
+// 3.4 301 Permanent Redirects for legacy/changed URLs
+app.get([
+  '/blog/kashmir-university-distance-education-2',
+  '/blogs/kashmir-university-distance-education-2'
+], (req, res) => {
+  return res.redirect(301, '/blog/kashmir-university-distance-education');
+});
+
 // 3.5 Server-Side SEO Pre-rendering for single blog articles
 // Guarantees Googlebot and social crawlers get full HTML, Title, Meta, and JSON-LD with ZERO client fetch delay
 app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, next) => {

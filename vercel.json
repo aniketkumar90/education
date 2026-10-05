@@ -7,6 +7,18 @@
       "includeFiles": "client/dist/**"
     }
   },
+  "redirects": [
+    {
+      "source": "/blog/kashmir-university-distance-education-2",
+      "destination": "/blog/kashmir-university-distance-education",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/kashmir-university-distance-education-2",
+      "destination": "/blog/kashmir-university-distance-education",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
