@@ -11,11 +11,13 @@ export default function Footer() {
           {/* Brand */}
           <div style={styles.brand}>
             <Link to="/" style={styles.logo}>
-              <div style={styles.logoIcon}>
-                <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
+              <img
+                src="/logo-512.png"
+                alt="DLEducationConnect Logo"
+                width={32}
+                height={32}
+                style={{ width: 32, height: 32, objectFit: 'contain' }}
+              />
               <span style={styles.logoText}>DLEducation<span style={{ color: 'var(--primary)' }}>Connect</span></span>
             </Link>
           </div>

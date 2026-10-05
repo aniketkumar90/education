@@ -63,11 +63,13 @@ export default function Navbar({ user, setUser }) {
       <div className="container" style={styles.inner}>
         {/* Logo */}
         <Link to="/" style={styles.logo}>
-          <div style={styles.logoIcon}>
-            <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+          <img
+            src="/logo-512.png"
+            alt="DLEducationConnect Logo"
+            width={38}
+            height={38}
+            style={{ width: 38, height: 38, objectFit: 'contain' }}
+          />
           <span style={styles.logoText}>DLEducation<span style={styles.logoAccent}>Connect</span></span>
         </Link>
 

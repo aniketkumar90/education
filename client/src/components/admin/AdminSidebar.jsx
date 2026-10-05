@@ -89,13 +89,15 @@ export default function AdminSidebar({ activeTab, onSelectTab, onLogout, isOpen 
         {/* Brand Header */}
         <div style={styles.brandHeader}>
           <div style={styles.brandLogoBox}>
-            <div style={styles.brandIcon}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4" />
-              </svg>
-            </div>
+            <img
+              src="/logo-512.png"
+              alt="DLEducationConnect Logo"
+              width={38}
+              height={38}
+              style={{ width: 38, height: 38, objectFit: 'contain' }}
+            />
             <div>
-              <div style={styles.brandTitle}>EDUCATION</div>
+              <div style={styles.brandTitle}>DLEDUCATION</div>
             </div>
           </div>
           <button
