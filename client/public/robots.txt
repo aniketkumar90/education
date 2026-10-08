@@ -1,8 +1,14 @@
 User-agent: *
 Allow: /
+Allow: /blog-cover/
+Allow: /blogs/*/cover
+Allow: /api/blogs/*/cover
+Allow: /sitemap.xml
+Allow: /rss.xml
 Disallow: /admin
 Disallow: /login
 Disallow: /api/
 
 Sitemap: https://dleducationconnect.in/sitemap.xml
 Sitemap: https://dleducationconnect.in/rss.xml
+

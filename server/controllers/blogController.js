@@ -374,4 +374,120 @@ const getCategories = async (req, res, next) => {
   }
 };
 
-module.exports = { getAllBlogs, getBlogById, createBlog, updateBlog, deleteBlog, getCategories };
+// @desc    Get blog cover image as high-performance binary HTTP asset (handles base64 stored in DB)
+// @route   GET /api/blogs/:identifier/cover
+// @access  Public
+const getBlogCoverImage = async (req, res, next) => {
+  try {
+    const identifier = req.params.identifier;
+    let blog = null;
+
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      blog = await Blog.findById(identifier, 'coverImage slug');
+    }
+    if (!blog) {
+      const cleanSlug = identifier.replace(/^\/?blog\/?/i, '').toLowerCase();
+      blog = await Blog.findOne({ slug: cleanSlug }, 'coverImage slug');
+    }
+
+    if (!blog || !blog.coverImage) {
+      return res.redirect(302, '/logo-512.png');
+    }
+
+    const cover = typeof blog.coverImage === 'object' ? blog.coverImage.url : blog.coverImage;
+    if (!cover) {
+      return res.redirect(302, '/logo-512.png');
+    }
+
+    // If it's a data URI (base64), serve directly as binary image buffer with cache headers!
+    if (cover.startsWith('data:')) {
+      const match = cover.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/s);
+      if (match) {
+        const mimeType = match[1];
+        const buffer = Buffer.from(match[2], 'base64');
+        res.set('Content-Type', mimeType);
+        res.set('Cache-Control', 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400');
+        return res.send(buffer);
+      }
+    }
+
+    // If it's already an HTTP / Cloudinary URL, redirect to it
+    if (cover.startsWith('http://') || cover.startsWith('https://')) {
+      return res.redirect(302, cover);
+    }
+
+    return res.redirect(302, '/logo-512.png');
+  } catch (err) {
+    return res.redirect(302, '/logo-512.png');
+  }
+};
+
+// @desc    Submit all published blog URLs to IndexNow for instantaneous search engine crawling
+// @route   POST or GET /api/blogs/indexnow/submit-all
+// @access  Public / Admin
+const submitAllToIndexNow = async (req, res, next) => {
+  try {
+    const blogs = await Blog.find(
+      { $or: [{ status: 'Published' }, { published: true }] },
+      'slug _id'
+    ).lean();
+
+    const siteUrl = 'https://dleducationconnect.in';
+    const urlList = [
+      `${siteUrl}/`,
+      `${siteUrl}/blogs`,
+      ...blogs.map((b) => `${siteUrl}/blog/${b.slug || b._id}`),
+    ];
+
+    const payload = JSON.stringify({
+      host: 'dleducationconnect.in',
+      key: 'dleducationconnect2026',
+      keyLocation: 'https://dleducationconnect.in/dleducationconnect2026.txt',
+      urlList,
+    });
+
+    const indexNowReq = https.request(
+      'https://api.indexnow.org/indexnow',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+        timeout: 6000,
+      },
+      (response) => {
+        let responseBody = '';
+        response.on('data', (chunk) => { responseBody += chunk; });
+        response.on('end', () => {
+          res.json({
+            success: true,
+            statusCode: response.statusCode,
+            message: `Submitted ${urlList.length} URLs to IndexNow successfully 🚀`,
+            urls: urlList,
+          });
+        });
+      }
+    );
+
+    indexNowReq.on('error', (err) => {
+      res.status(500).json({ success: false, error: err.message, urls: urlList });
+    });
+
+    indexNowReq.write(payload);
+    indexNowReq.end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getAllBlogs,
+  getBlogById,
+  createBlog,
+  updateBlog,
+  deleteBlog,
+  getCategories,
+  getBlogCoverImage,
+  submitAllToIndexNow,
+};

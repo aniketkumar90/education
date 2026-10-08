@@ -53,6 +53,16 @@ export default function RichContentEditor({ value, onChange }) {
   const [showFloating, setShowFloating] = useState(false);
   const [floatingPos, setFloatingPos] = useState({ top: 0, left: 0 });
 
+  // Link Modal State (DoFollow/NoFollow & Same Tab/New Tab)
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkForm, setLinkForm] = useState({
+    url: '',
+    text: '',
+    target: '_self', // '_self' or '_blank'
+    relType: 'dofollow', // 'dofollow' or 'nofollow'
+    isEditing: false,
+  });
+
   const editorRef = useRef(null);
   const containerRef = useRef(null);
   const textareaRef = useRef(null);
@@ -208,12 +218,169 @@ export default function RichContentEditor({ value, onChange }) {
     handleInput();
   };
 
-  const addLink = () => {
-    restoreSelection();
-    const url = prompt('Enter link URL (https://...):', 'https://');
-    if (url) {
-      exec('createLink', url);
+  // Open Custom Link Modal with Selection & Anchor Detection
+  const openLinkModal = () => {
+    saveSelection();
+    const sel = window.getSelection();
+    let initialText = '';
+    let initialUrl = '';
+    let initialTarget = '_self';
+    let initialRel = 'dofollow';
+    let isEditingExisting = false;
+
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      initialText = range.toString().trim();
+
+      // Check if cursor/selection is inside an existing <a> tag
+      let node = range.commonAncestorContainer;
+      while (node && node !== editorRef.current) {
+        if (node.nodeName === 'A') {
+          isEditingExisting = true;
+          initialUrl = node.getAttribute('href') || '';
+          initialText = node.textContent || '';
+          initialTarget = node.getAttribute('target') === '_blank' ? '_blank' : '_self';
+          const relAttr = (node.getAttribute('rel') || '').toLowerCase();
+          initialRel = relAttr.includes('nofollow') ? 'nofollow' : 'dofollow';
+          break;
+        }
+        node = node.parentNode;
+      }
     }
+
+    setLinkForm({
+      url: initialUrl,
+      text: initialText,
+      target: initialTarget,
+      relType: initialRel,
+      isEditing: isEditingExisting,
+    });
+    setShowLinkModal(true);
+  };
+
+  // Smart URL handler for detecting internal vs external
+  const handleUrlChange = (val) => {
+    setLinkForm((prev) => {
+      const next = { ...prev, url: val };
+      if (!prev.isEditing) {
+        const trimmed = val.trim().toLowerCase();
+        const isInternal =
+          trimmed.startsWith('/') ||
+          trimmed.startsWith('#') ||
+          trimmed.includes('dleducationconnect');
+
+        if (isInternal) {
+          next.target = '_self';
+          next.relType = 'dofollow';
+        } else if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+          next.target = '_blank';
+        }
+      }
+      return next;
+    });
+  };
+
+  // Save / Apply Link with attributes
+  const handleSaveLink = (e) => {
+    if (e) e.preventDefault();
+    const { url, text, target, relType } = linkForm;
+    if (!url.trim()) {
+      alert('Please enter a link URL');
+      return;
+    }
+
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) {
+      setShowLinkModal(false);
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+
+    // Look for existing anchor
+    let existingA = null;
+    let node = range.commonAncestorContainer;
+    while (node && node !== editorRef.current) {
+      if (node.nodeName === 'A') {
+        existingA = node;
+        break;
+      }
+      node = node.parentNode;
+    }
+
+    const cleanUrl = url.trim();
+    const displayText = text.trim() || cleanUrl;
+
+    if (existingA) {
+      existingA.setAttribute('href', cleanUrl);
+      if (text.trim()) {
+        existingA.textContent = displayText;
+      }
+      if (target === '_blank') {
+        existingA.setAttribute('target', '_blank');
+        existingA.setAttribute(
+          'rel',
+          relType === 'nofollow' ? 'nofollow noopener noreferrer' : 'noopener noreferrer'
+        );
+      } else {
+        existingA.removeAttribute('target');
+        if (relType === 'nofollow') {
+          existingA.setAttribute('rel', 'nofollow');
+        } else {
+          existingA.removeAttribute('rel');
+        }
+      }
+    } else {
+      const a = document.createElement('a');
+      a.setAttribute('href', cleanUrl);
+      a.textContent = displayText;
+
+      if (target === '_blank') {
+        a.setAttribute('target', '_blank');
+        a.setAttribute(
+          'rel',
+          relType === 'nofollow' ? 'nofollow noopener noreferrer' : 'noopener noreferrer'
+        );
+      } else {
+        if (relType === 'nofollow') {
+          a.setAttribute('rel', 'nofollow');
+        }
+      }
+
+      range.deleteContents();
+      range.insertNode(a);
+
+      range.setStartAfter(a);
+      range.setEndAfter(a);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    saveSelection();
+    handleInput();
+    setShowLinkModal(false);
+  };
+
+  // Remove existing link (Unlink)
+  const handleRemoveLink = () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount) {
+      const range = sel.getRangeAt(0);
+      let node = range.commonAncestorContainer;
+      while (node && node !== editorRef.current) {
+        if (node.nodeName === 'A') {
+          const textNode = document.createTextNode(node.textContent);
+          node.parentNode.replaceChild(textNode, node);
+          break;
+        }
+        node = node.parentNode;
+      }
+    }
+    saveSelection();
+    handleInput();
+    setShowLinkModal(false);
   };
 
   const addImage = () => {
@@ -520,9 +687,9 @@ export default function RichContentEditor({ value, onChange }) {
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
-          onClick={addLink}
+          onClick={openLinkModal}
           style={styles.toolBtn}
-          title="Insert Link (🔗)"
+          title="Insert / Edit Link (🔗 DoFollow / NoFollow & Target)"
         >
           🔗
         </button>
@@ -704,6 +871,241 @@ export default function RichContentEditor({ value, onChange }) {
           style={styles.editableArea}
           placeholder="Write your blog content here... Use the toolbar above or select text to format headings, colors, lists, and justify content!"
         />
+      )}
+
+      {/* 5. Custom Link Modal with DoFollow/NoFollow & Same/New Page Selection */}
+      {showLinkModal && (
+        <div
+          style={styles.modalBackdrop}
+          onClick={() => setShowLinkModal(false)}
+        >
+          <div
+            style={styles.modalCard}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={styles.modalHeader}>
+              <div>
+                <h4 style={styles.modalTitle}>
+                  🔗 {linkForm.isEditing ? 'Edit Hyperlink' : 'Insert Hyperlink'}
+                </h4>
+                <p style={styles.modalSubtitle}>
+                  Configure URL, destination window, and SEO crawl attributes.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLinkModal(false)}
+                style={styles.modalCloseBtn}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveLink} style={styles.modalBody}>
+              {/* URL Field */}
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>
+                  Link URL <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={linkForm.url}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="e.g., /blogs/bcom-distance-education or https://..."
+                  required
+                  autoFocus
+                  style={styles.formInput}
+                />
+                {/* Smart detection helper */}
+                {linkForm.url && (
+                  <div style={styles.urlHintRow}>
+                    {linkForm.url.startsWith('/') ||
+                    linkForm.url.startsWith('#') ||
+                    linkForm.url.toLowerCase().includes('dleducationconnect') ? (
+                      <span style={styles.internalBadge}>
+                        🏠 <strong>Internal Link</strong> (Same domain detected)
+                      </span>
+                    ) : (
+                      <span style={styles.externalBadge}>
+                        🌐 <strong>External Link</strong> (Third-party site detected)
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Anchor Text */}
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>
+                  Display Text (Anchor Text)
+                </label>
+                <input
+                  type="text"
+                  value={linkForm.text}
+                  onChange={(e) =>
+                    setLinkForm((prev) => ({ ...prev, text: e.target.value }))
+                  }
+                  placeholder="Selected text or link title..."
+                  style={styles.formInput}
+                />
+              </div>
+
+              {/* 1. Target Window (Open Mode) */}
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>
+                  🌐 Open In (Target Window):
+                </label>
+                <div style={styles.radioGrid}>
+                  <label
+                    style={{
+                      ...styles.radioCard,
+                      ...(linkForm.target === '_self' ? styles.radioCardActive : {}),
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="linkTarget"
+                      checked={linkForm.target === '_self'}
+                      onChange={() =>
+                        setLinkForm((prev) => ({ ...prev, target: '_self' }))
+                      }
+                      style={styles.radioInput}
+                    />
+                    <div>
+                      <div style={styles.radioHead}>
+                        <span>📄 Same Page / Tab</span>
+                        <span style={styles.tagPill}>target="_self"</span>
+                      </div>
+                      <div style={styles.radioDesc}>
+                        Current window mein khulega (<strong>Internal links</strong> ke liye recommended).
+                      </div>
+                    </div>
+                  </label>
+
+                  <label
+                    style={{
+                      ...styles.radioCard,
+                      ...(linkForm.target === '_blank' ? styles.radioCardActive : {}),
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="linkTarget"
+                      checked={linkForm.target === '_blank'}
+                      onChange={() =>
+                        setLinkForm((prev) => ({ ...prev, target: '_blank' }))
+                      }
+                      style={styles.radioInput}
+                    />
+                    <div>
+                      <div style={styles.radioHead}>
+                        <span>↗ New Tab / New Page</span>
+                        <span style={styles.tagPill}>target="_blank"</span>
+                      </div>
+                      <div style={styles.radioDesc}>
+                        Naye browser tab mein khulega (<strong>External references</strong> ke liye behtar).
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* 2. SEO Attribute: DoFollow vs NoFollow */}
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>
+                  🔍 Google SEO Attribute (Crawl Equity):
+                </label>
+                <div style={styles.radioGrid}>
+                  <label
+                    style={{
+                      ...styles.radioCard,
+                      ...(linkForm.relType === 'dofollow' ? styles.radioCardActive : {}),
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="linkRel"
+                      checked={linkForm.relType === 'dofollow'}
+                      onChange={() =>
+                        setLinkForm((prev) => ({ ...prev, relType: 'dofollow' }))
+                      }
+                      style={styles.radioInput}
+                    />
+                    <div>
+                      <div style={styles.radioHead}>
+                        <span>⭐ DoFollow (Standard)</span>
+                        <span style={styles.dofollowPill}>Pass Link Rank</span>
+                      </div>
+                      <div style={styles.radioDesc}>
+                        Googlebot link ko crawl karega aur page rank transfer karega (Internal linking ke liye best).
+                      </div>
+                    </div>
+                  </label>
+
+                  <label
+                    style={{
+                      ...styles.radioCard,
+                      ...(linkForm.relType === 'nofollow' ? styles.radioCardActive : {}),
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="linkRel"
+                      checked={linkForm.relType === 'nofollow'}
+                      onChange={() =>
+                        setLinkForm((prev) => ({ ...prev, relType: 'nofollow' }))
+                      }
+                      style={styles.radioInput}
+                    />
+                    <div>
+                      <div style={styles.radioHead}>
+                        <span>🛡️ NoFollow</span>
+                        <span style={styles.nofollowPill}>rel="nofollow"</span>
+                      </div>
+                      <div style={styles.radioDesc}>
+                        Search engines ko batata hai ki is link ko endorse na karein (Paid / external links).
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div style={styles.modalFooter}>
+                {linkForm.isEditing ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveLink}
+                    style={styles.removeLinkBtn}
+                    title="Remove this hyperlink"
+                  >
+                    🗑️ Remove Link
+                  </button>
+                ) : (
+                  <span />
+                )}
+
+                <div style={styles.modalBtnRow}>
+                  <button
+                    type="button"
+                    onClick={() => setShowLinkModal(false)}
+                    style={styles.cancelBtn}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    style={styles.saveLinkBtn}
+                  >
+                    {linkForm.isEditing ? '✓ Update Link' : '✓ Insert Link'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -938,5 +1340,225 @@ const styles = {
     resize: 'none',
     overflowY: 'hidden',
     borderRadius: '0 0 8px 8px',
+  },
+
+  // Modal Styles
+  modalBackdrop: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(3px)',
+    zIndex: 99999,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 530,
+    background: '#ffffff',
+    borderRadius: 12,
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    overflow: 'hidden',
+    border: '1px solid #e2e8f0',
+    animation: 'fadeIn 0.15s ease',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: '16px 20px',
+    background: '#f8fafc',
+    borderBottom: '1px solid #e2e8f0',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#0f172a',
+    margin: 0,
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    color: '#64748b',
+    margin: '3px 0 0 0',
+  },
+  modalCloseBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#94a3b8',
+    cursor: 'pointer',
+    padding: '2px 6px',
+    borderRadius: 4,
+  },
+  modalBody: {
+    padding: '18px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 14,
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 5,
+  },
+  formLabel: {
+    fontSize: 12.5,
+    fontWeight: 700,
+    color: '#334155',
+  },
+  formInput: {
+    width: '100%',
+    padding: '9px 12px',
+    borderRadius: 7,
+    border: '1.5px solid #cbd5e1',
+    fontSize: 13.5,
+    color: '#0f172a',
+    outline: 'none',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+    transition: 'border-color 0.15s ease',
+  },
+  urlHintRow: {
+    marginTop: 4,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  internalBadge: {
+    fontSize: 11,
+    padding: '2px 8px',
+    borderRadius: 4,
+    background: '#ecfdf5',
+    color: '#047857',
+    border: '1px solid #a7f3d0',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+  },
+  externalBadge: {
+    fontSize: 11,
+    padding: '2px 8px',
+    borderRadius: 4,
+    background: '#eff6ff',
+    color: '#1d4ed8',
+    border: '1px solid #bfdbfe',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+  },
+  radioGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 10,
+  },
+  radioCard: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: '10px 12px',
+    border: '1.5px solid #e2e8f0',
+    borderRadius: 8,
+    cursor: 'pointer',
+    background: '#ffffff',
+    transition: 'all 0.15s ease',
+  },
+  radioCardActive: {
+    borderColor: '#2563eb',
+    background: '#eff6ff',
+    boxShadow: '0 0 0 1px #2563eb',
+  },
+  radioInput: {
+    marginTop: 3,
+    cursor: 'pointer',
+  },
+  radioHead: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontSize: 12.5,
+    fontWeight: 700,
+    color: '#1e293b',
+    flexWrap: 'wrap',
+  },
+  radioDesc: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 3,
+    lineHeight: 1.35,
+  },
+  tagPill: {
+    fontSize: 9.5,
+    fontFamily: 'monospace',
+    background: '#f1f5f9',
+    padding: '1px 5px',
+    borderRadius: 3,
+    color: '#475569',
+  },
+  dofollowPill: {
+    fontSize: 9.5,
+    fontWeight: 700,
+    background: '#dcfce7',
+    color: '#15803d',
+    padding: '1px 6px',
+    borderRadius: 3,
+  },
+  nofollowPill: {
+    fontSize: 9.5,
+    fontFamily: 'monospace',
+    fontWeight: 700,
+    background: '#fee2e2',
+    color: '#b91c1c',
+    padding: '1px 6px',
+    borderRadius: 3,
+  },
+  modalFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 12,
+    borderTop: '1px solid #f1f5f9',
+  },
+  removeLinkBtn: {
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+    color: '#dc2626',
+    borderRadius: 6,
+    padding: '7px 12px',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  modalBtnRow: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+  },
+  cancelBtn: {
+    background: '#f8fafc',
+    border: '1px solid #cbd5e1',
+    color: '#475569',
+    borderRadius: 6,
+    padding: '7px 14px',
+    fontSize: 12.5,
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  saveLinkBtn: {
+    background: '#2563eb',
+    border: 'none',
+    color: '#ffffff',
+    borderRadius: 6,
+    padding: '7px 16px',
+    fontSize: 12.5,
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)',
   },
 };

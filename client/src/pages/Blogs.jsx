@@ -1,7 +1,19 @@
+import { useEffect } from 'react';
 import BlogGrid from '../components/BlogGrid';
 import Sidebar from '../components/Sidebar';
 
 export default function Blogs() {
+  useEffect(() => {
+    document.title = 'All Distance Education Blogs & University Admission Guides | DLEducationConnect';
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', 'https://dleducationconnect.in/blogs');
+  }, []);
+
   return (
     <div style={styles.page}>
       <div style={styles.pageHeader}>

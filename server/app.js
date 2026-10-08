@@ -164,17 +164,99 @@ app.get([
   return res.redirect(301, '/blog/kashmir-university-distance-education');
 });
 
-// 3.5 Server-Side SEO Pre-rendering for single blog articles
-// Guarantees Googlebot and social crawlers get full HTML, Title, Meta, and JSON-LD with ZERO client fetch delay
+// Helper: load client index.html template from dist or source
+const getHtmlTemplate = () => {
+  const fs = require('fs');
+  const candidates = [
+    path.join(__dirname, '../client/dist/index.html'),
+    path.join(__dirname, 'client/dist/index.html'),
+    path.join(__dirname, '../client/index.html'),
+    path.join(__dirname, 'client/index.html'),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      return fs.readFileSync(c, 'utf8');
+    }
+  }
+  return '';
+};
+
+// Helper: assemble complete HTML page replacing <div id="root"> and head metadata cleanly
+const buildHtmlPage = ({ template, title, description, canonicalUrl, ogType = 'website', ogImage, jsonLd, bodyContent }) => {
+  let html = template;
+  if (!html) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title}</title>
+  <meta name="description" content="${description.replace(/"/g, '&quot;')}">
+  <link rel="canonical" href="${canonicalUrl}">
+  <meta property="og:type" content="${ogType}">
+  <meta property="og:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">
+  <meta property="og:url" content="${canonicalUrl}">
+  <meta property="og:image" content="${ogImage}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}">
+  <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}">
+  <meta name="twitter:image" content="${ogImage}">
+  ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
+</head>
+<body>
+  <div id="root">${bodyContent}</div>
+</body>
+</html>`;
+  }
+
+  // Replace Title
+  html = html.replace(/<title>.*?<\/title>/i, `<title>${title}</title>`);
+  // Replace Description
+  html = html.replace(/<meta\s+name=["']description["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta name="description" content="${description.replace(/"/g, '&quot;')}" />`);
+  // Replace Canonical
+  html = html.replace(/<link\s+rel=["']canonical["']\s+href=["'][^"']*?["']\s*\/?>/i, `<link rel="canonical" href="${canonicalUrl}" />`);
+  // Replace OG tags
+  html = html.replace(/<meta\s+property=["']og:title["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />`);
+  html = html.replace(/<meta\s+property=["']og:description["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta property="og:description" content="${description.replace(/"/g, '&quot;')}" />`);
+  html = html.replace(/<meta\s+property=["']og:url["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta property="og:url" content="${canonicalUrl}" />`);
+  html = html.replace(/<meta\s+property=["']og:image["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta property="og:image" content="${ogImage}" />`);
+  if (ogType !== 'website') {
+    html = html.replace(/<meta\s+property=["']og:type["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta property="og:type" content="${ogType}" />`);
+  }
+  // Replace Twitter tags
+  html = html.replace(/<meta\s+name=["']twitter:title["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}" />`);
+  html = html.replace(/<meta\s+name=["']twitter:description["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}" />`);
+  html = html.replace(/<meta\s+name=["']twitter:image["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta name="twitter:image" content="${ogImage}" />`);
+
+  // Inject JSON-LD Schema
+  if (jsonLd) {
+    html = html.replace('</head>', `  <script type="application/ld+json">${jsonLd}</script>\n</head>`);
+  }
+
+  // Replace existing <div id="root">...</div> completely (removes duplicate H1 and static placeholders)
+  html = html.replace(/<div id="root">[\s\S]*?<\/div>/i, `<div id="root">${bodyContent}</div>`);
+
+  return html;
+};
+
+// 3.5 Blog Cover Image Binary Asset Endpoint
+// Converts base64 stored in DB into lightweight, fast, CDN-cacheable binary HTTP image
+const { getBlogCoverImage } = require('./controllers/blogController');
+app.get([
+  '/blog-cover/:identifier',
+  '/blogs/:identifier/cover',
+  '/api/blogs/:identifier/cover'
+], ensureDbConnected, getBlogCoverImage);
+
+// 3.6 Server-Side SEO Pre-rendering for single blog articles
 app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, next) => {
   const acceptHeader = req.headers.accept || '';
-  // If the client explicitly requests JSON (e.g. direct API test), pass to next API handler
   if (acceptHeader.includes('application/json') && !acceptHeader.includes('text/html')) {
     return next();
   }
 
   try {
-    const fs = require('fs');
     const Blog = require('./models/blogModel');
     const mongoose = require('mongoose');
     const identifier = req.params.slug;
@@ -205,47 +287,63 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
 
     const siteUrl = 'https://dleducationconnect.in';
     const blogUrl = `${siteUrl}/blog/${blog.slug || blog._id}`;
-    const coverUrl = (typeof blog.coverImage === 'object' ? blog.coverImage?.url : blog.coverImage) || `${siteUrl}/logo-512.png`;
+    const rawCover = (typeof blog.coverImage === 'object' ? blog.coverImage?.url : blog.coverImage) || '';
+    const isExternalCover = rawCover.startsWith('http://') || rawCover.startsWith('https://');
+    const coverUrl = isExternalCover ? rawCover : `${siteUrl}/blog-cover/${blog.slug || blog._id}`;
     const title = `${blog.metaTitle || blog.title} | DLEducationConnect`;
     const description = blog.metaDescription || blog.excerpt || 'Verified distance education guides and university updates.';
     const keywords = (blog.tags && blog.tags.length > 0) ? blog.tags.join(', ') : (blog.focusKeyword || 'distance education, university');
     const authorName = blog.authorName || blog.author?.name || 'Aniket Kumar';
 
-    const candidates = [
-      path.join(__dirname, '../client/dist/index.html'),
-      path.join(__dirname, 'client/dist/index.html'),
-      path.join(__dirname, '../client/index.html'),
-    ];
-    let template = '';
-    for (const c of candidates) {
-      if (fs.existsSync(c)) {
-        template = fs.readFileSync(c, 'utf8');
-        break;
-      }
-    }
-
     const jsonLd = JSON.stringify({
       '@context': 'https://schema.org',
-      '@type': 'Article',
-      headline: blog.title,
-      description: description,
-      image: coverUrl,
-      author: { '@type': 'Person', name: authorName },
-      publisher: {
-        '@type': 'Organization',
-        name: 'DLEducationConnect',
-        logo: { '@type': 'ImageObject', url: `${siteUrl}/logo-512.png` },
-      },
-      datePublished: new Date(blog.publishDate || blog.createdAt).toISOString(),
-      dateModified: new Date(blog.updatedAt || blog.createdAt).toISOString(),
-      mainEntityOfPage: { '@type': 'WebPage', '@id': blogUrl },
-      url: blogUrl,
-      keywords: keywords,
-      articleSection: blog.category || 'Education',
-      inLanguage: 'en-IN',
+      '@graph': [
+        {
+          '@type': 'Article',
+          headline: blog.title,
+          description: description,
+          image: coverUrl,
+          author: { '@type': 'Person', name: authorName },
+          publisher: {
+            '@type': 'Organization',
+            name: 'DLEducationConnect',
+            logo: { '@type': 'ImageObject', url: `${siteUrl}/logo-512.png` },
+          },
+          datePublished: new Date(blog.publishDate || blog.createdAt).toISOString(),
+          dateModified: new Date(blog.updatedAt || blog.createdAt).toISOString(),
+          mainEntityOfPage: { '@type': 'WebPage', '@id': blogUrl },
+          url: blogUrl,
+          keywords: keywords,
+          articleSection: blog.category || 'Education',
+          inLanguage: 'en-IN',
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: `${siteUrl}/`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'All Articles',
+              item: `${siteUrl}/blogs`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: blog.title,
+              item: blogUrl,
+            },
+          ],
+        },
+      ],
     });
 
-    // Fetch recent published blogs to create a strong internal linking network for Googlebot
+    // Fetch related/recent published blogs for internal link equity
     const recentBlogs = await Blog.find(
       {
         _id: { $ne: blog._id },
@@ -261,7 +359,7 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
       recentBlogs && recentBlogs.length > 0
         ? `
       <section style="margin-top:40px;padding-top:24px;border-top:2px solid #e2e8f0;">
-        <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:16px;">Latest Education Guides &amp; University Updates</h2>
+        <h2 style="font-size:22px;font-weight:700;color:#0f172a;margin-bottom:16px;">Latest Distance Education Guides &amp; University Notifications</h2>
         <ul style="list-style:disc;padding-left:22px;line-height:2.2;font-size:16px;">
           ${recentBlogs
             .map(
@@ -279,64 +377,287 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
 
     const preRenderedBody = `
       <article style="max-width:860px;margin:30px auto;padding:0 20px;">
+        <nav style="font-size:14px;color:#64748b;margin-bottom:14px;">
+          <a href="/" style="color:#2563eb;text-decoration:none;">Home</a> &rsaquo;
+          <a href="/blogs" style="color:#2563eb;text-decoration:none;">Articles</a> &rsaquo;
+          <span>${blog.title}</span>
+        </nav>
         <h1 style="font-size:32px;font-weight:800;color:#0f172a;line-height:1.3;margin:0 0 10px 0;text-align:left;">${blog.title}</h1>
         <div style="font-size:14px;color:#64748b;margin-bottom:18px;">By <strong style="color:#0f172a;">${authorName}</strong> / ${new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
         <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:8px;margin-bottom:24px;display:block;" />
-        <div class="blog-rich-content" style="font-size:16px;color:#334155;">
+        <div class="blog-rich-content" style="font-size:16px;color:#334155;line-height:1.8;">
           ${blog.content || ''}
         </div>
         ${recentLinksHtml}
       </article>
     `;
 
-    if (template) {
-      let html = template;
-      html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
-      html = html.replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${description.replace(/"/g, '&quot;')}" />`);
-      html = html.replace(/<link rel="canonical" href=".*?" \/>/, `<link rel="canonical" href="${blogUrl}" />`);
-      html = html.replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${title.replace(/"/g, '&quot;')}" />`);
-      html = html.replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${description.replace(/"/g, '&quot;')}" />`);
-      html = html.replace(/<meta property="og:url" content=".*?" \/>/, `<meta property="og:url" content="${blogUrl}" />`);
-      html = html.replace(/<meta property="og:image" content=".*?" \/>/, `<meta property="og:image" content="${coverUrl}" />`);
+    // Build sanitized initial blog payload without massive base64 image strings
+    const sanitizedBlog = {
+      _id: blog._id,
+      title: blog.title,
+      metaTitle: blog.metaTitle,
+      metaDescription: blog.metaDescription,
+      focusKeyword: blog.focusKeyword,
+      slug: blog.slug,
+      category: blog.category,
+      tags: blog.tags,
+      coverImage: { url: coverUrl, publicId: blog.coverImage?.publicId || '' },
+      imageAlt: blog.imageAlt,
+      excerpt: blog.excerpt,
+      content: blog.content,
+      authorName: authorName,
+      publishDate: blog.publishDate,
+      createdAt: blog.createdAt,
+      updatedAt: blog.updatedAt,
+      status: blog.status,
+      published: blog.published,
+    };
 
-      const headInject = `
-    <script type="application/ld+json">${jsonLd}</script>
-    <script>window.__INITIAL_BLOG__ = ${JSON.stringify(blog)};</script>
-`;
-      html = html.replace('</head>', `${headInject}</head>`);
-      html = html.replace('<div id="root">', `<div id="root">${preRenderedBody}`);
+    const template = getHtmlTemplate();
+    let finalHtml = buildHtmlPage({
+      template,
+      title,
+      description,
+      canonicalUrl: blogUrl,
+      ogType: 'article',
+      ogImage: coverUrl,
+      jsonLd,
+      bodyContent: preRenderedBody,
+    });
 
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.send(html);
-    }
+    // Inject sanitized window.__INITIAL_BLOG__ so client hydrates instantaneously without refetching
+    finalHtml = finalHtml.replace(
+      '</head>',
+      `  <script>window.__INITIAL_BLOG__ = ${JSON.stringify(sanitizedBlog)};</script>\n</head>`
+    );
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title}</title>
-  <meta name="description" content="${description.replace(/"/g, '&quot;')}">
-  <link rel="canonical" href="${blogUrl}">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="${title.replace(/"/g, '&quot;')}">
-  <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">
-  <meta property="og:image" content="${coverUrl}">
-  <meta property="og:url" content="${blogUrl}">
-  <script type="application/ld+json">${jsonLd}</script>
-  <script>window.__INITIAL_BLOG__ = ${JSON.stringify(blog)};</script>
-</head>
-<body>
-  <div id="root">${preRenderedBody}</div>
-</body>
-</html>`);
+    return res.send(finalHtml);
   } catch (err) {
     next(err);
   }
 });
 
-// 4. Dynamic Sitemap XML — Google uses this to discover all blog pages
+// 3.7 Server-Side SEO Pre-rendering for Homepage (/)
+app.get('/', ensureDbConnected, async (req, res, next) => {
+  const acceptHeader = req.headers.accept || '';
+  if (acceptHeader.includes('application/json') && !acceptHeader.includes('text/html')) {
+    return next();
+  }
+
+  try {
+    const Blog = require('./models/blogModel');
+    const blogs = await Blog.find(
+      { $or: [{ status: 'Published' }, { published: true }] },
+      'title slug _id excerpt coverImage publishDate createdAt category'
+    )
+      .sort({ publishDate: -1, createdAt: -1 })
+      .limit(12)
+      .lean();
+
+    const siteUrl = 'https://dleducationconnect.in';
+    const title = 'DLEducationConnect - Distance Education & University Admissions Guide 2026';
+    const description = 'Verified distance education admission guides, university notifications, fee structures, syllabus, eligibility, and course updates for top Indian universities.';
+
+    const jsonLd = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          name: 'DLEducationConnect',
+          url: siteUrl,
+          logo: `${siteUrl}/logo-512.png`,
+          description: description,
+          sameAs: [siteUrl],
+        },
+        {
+          '@type': 'WebSite',
+          name: 'DLEducationConnect',
+          url: siteUrl,
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: `${siteUrl}/blogs?search={search_term_string}`,
+            'query-input': 'required name=search_term_string',
+          },
+        },
+      ],
+    });
+
+    const bodyContent = `
+      <header style="padding: 30px 20px; font-family: sans-serif; max-width: 1200px; margin: 0 auto; text-align: center;">
+        <h1 style="font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 12px; line-height: 1.3;">
+          DLEducationConnect - Distance Education &amp; University Admissions Guide
+        </h1>
+        <p style="font-size: 17px; color: #475569; line-height: 1.6; max-width: 820px; margin: 0 auto;">
+          Your trusted national education portal for verified distance learning degree admissions, UGC-DEB notifications, course eligibility, fees, last dates, and verified university updates.
+        </p>
+      </header>
+      <main style="padding: 20px; font-family: sans-serif; max-width: 1200px; margin: 0 auto;">
+        <h2 style="font-size: 24px; color: #1e293b; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+          Latest Distance Education Articles &amp; University Updates
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+          ${blogs
+            .map((b) => {
+              const rawCover = typeof b.coverImage === 'object' ? b.coverImage?.url : b.coverImage;
+              const isExt = rawCover && (rawCover.startsWith('http://') || rawCover.startsWith('https://'));
+              const cUrl = isExt ? rawCover : `${siteUrl}/blog-cover/${b.slug || b._id}`;
+              return `
+            <article style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+              <a href="/blog/${b.slug || b._id}" style="text-decoration:none; color:inherit;">
+                <img src="${cUrl}" alt="${b.title}" style="width: 100%; height: 180px; object-fit: cover; display: block;" loading="lazy" />
+                <div style="padding: 18px;">
+                  <span style="display: inline-block; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px;">
+                    ${b.category || 'Education'}
+                  </span>
+                  <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 8px 0; line-height: 1.4;">
+                    ${b.title}
+                  </h3>
+                  <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0 0 12px 0;">
+                    ${b.excerpt ? b.excerpt.substring(0, 130) + '...' : ''}
+                  </p>
+                  <span style="color: #2563eb; font-weight: 600; font-size: 14px; text-decoration: underline;">Read Full Guide &rarr;</span>
+                </div>
+              </a>
+            </article>`;
+            })
+            .join('')}
+        </div>
+        <div style="text-align: center; margin-top: 40px;">
+          <a href="/blogs" style="display: inline-block; background: #2563eb; color: #fff; font-weight: 700; padding: 12px 28px; border-radius: 8px; text-decoration: none;">
+            Browse All Education Articles &rarr;
+          </a>
+        </div>
+      </main>
+    `;
+
+    const template = getHtmlTemplate();
+    const finalHtml = buildHtmlPage({
+      template,
+      title,
+      description,
+      canonicalUrl: `${siteUrl}/`,
+      ogType: 'website',
+      ogImage: `${siteUrl}/logo-512.png`,
+      jsonLd,
+      bodyContent,
+    });
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(finalHtml);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 3.8 Server-Side SEO Pre-rendering for /blogs (Articles Directory)
+app.get('/blogs', ensureDbConnected, async (req, res, next) => {
+  const acceptHeader = req.headers.accept || '';
+  if (acceptHeader.includes('application/json') && !acceptHeader.includes('text/html')) {
+    return next();
+  }
+
+  try {
+    const Blog = require('./models/blogModel');
+    const blogs = await Blog.find(
+      { $or: [{ status: 'Published' }, { published: true }] },
+      'title slug _id excerpt coverImage publishDate createdAt category'
+    )
+      .sort({ publishDate: -1, createdAt: -1 })
+      .lean();
+
+    const siteUrl = 'https://dleducationconnect.in';
+    const title = 'All Distance Education Blogs & University Admission Guides | DLEducationConnect';
+    const description = 'Browse all verified distance education guides, admission notifications, university courses, fees, syllabus, eligibility, and last dates.';
+
+    const jsonLd = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'CollectionPage',
+          name: title,
+          description: description,
+          url: `${siteUrl}/blogs`,
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: `${siteUrl}/`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'All Articles',
+              item: `${siteUrl}/blogs`,
+            },
+          ],
+        },
+      ],
+    });
+
+    const bodyContent = `
+      <header style="padding: 30px 20px; font-family: sans-serif; max-width: 1200px; margin: 0 auto; text-align: center;">
+        <h1 style="font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">All Education Articles &amp; University Guides</h1>
+        <p style="font-size: 16px; color: #475569; max-width: 800px; margin: 0 auto;">
+          Comprehensive repository of verified admission updates, distance learning degree comparisons, syllabus outlines, and application guides.
+        </p>
+      </header>
+      <main style="padding: 20px; font-family: sans-serif; max-width: 1200px; margin: 0 auto;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+          ${blogs
+            .map((b) => {
+              const rawCover = typeof b.coverImage === 'object' ? b.coverImage?.url : b.coverImage;
+              const isExt = rawCover && (rawCover.startsWith('http://') || rawCover.startsWith('https://'));
+              const cUrl = isExt ? rawCover : `${siteUrl}/blog-cover/${b.slug || b._id}`;
+              return `
+            <article style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+              <a href="/blog/${b.slug || b._id}" style="text-decoration:none; color:inherit;">
+                <img src="${cUrl}" alt="${b.title}" style="width: 100%; height: 180px; object-fit: cover; display: block;" loading="lazy" />
+                <div style="padding: 18px;">
+                  <span style="display: inline-block; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px;">
+                    ${b.category || 'Education'}
+                  </span>
+                  <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 8px 0; line-height: 1.4;">
+                    ${b.title}
+                  </h2>
+                  <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0 0 12px 0;">
+                    ${b.excerpt ? b.excerpt.substring(0, 130) + '...' : ''}
+                  </p>
+                  <span style="color: #2563eb; font-weight: 600; font-size: 14px; text-decoration: underline;">Read Full Article &rarr;</span>
+                </div>
+              </a>
+            </article>`;
+            })
+            .join('')}
+        </div>
+      </main>
+    `;
+
+    const template = getHtmlTemplate();
+    const finalHtml = buildHtmlPage({
+      template,
+      title,
+      description,
+      canonicalUrl: `${siteUrl}/blogs`,
+      ogType: 'website',
+      ogImage: `${siteUrl}/logo-512.png`,
+      jsonLd,
+      bodyContent,
+    });
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(finalHtml);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 4. Dynamic Sitemap XML — 100% compliant with Google Search Engine & Image Sitemap specs
 app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
   try {
     await connectDB();
@@ -352,13 +673,14 @@ app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     const staticPages = [
-      { url: siteUrl, priority: '1.0', changefreq: 'daily' },
-      { url: `${siteUrl}/blogs`, priority: '0.9', changefreq: 'daily' },
-      { url: `${siteUrl}/login`, priority: '0.3', changefreq: 'monthly' },
+      { url: `${siteUrl}/`, priority: '1.0', changefreq: 'daily', lastmod: today },
+      { url: `${siteUrl}/blogs`, priority: '0.9', changefreq: 'daily', lastmod: today },
     ];
 
     const blogUrls = blogs.map((b) => {
-      const cover = typeof b.coverImage === 'object' ? b.coverImage?.url : b.coverImage;
+      const rawCover = typeof b.coverImage === 'object' ? b.coverImage?.url : b.coverImage;
+      const isExternalUrl = rawCover && (rawCover.startsWith('http://') || rawCover.startsWith('https://'));
+      const coverUrl = isExternalUrl ? rawCover : `${siteUrl}/blog-cover/${b.slug || b._id}`;
       return {
         url: `${siteUrl}/blog/${b.slug || b._id}`,
         priority: '0.8',
@@ -366,8 +688,8 @@ app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
         lastmod: b.updatedAt
           ? new Date(b.updatedAt).toISOString().split('T')[0]
           : today,
-        imageUrl: cover || null,
-        title: b.title || '',
+        imageUrl: coverUrl,
+        title: (b.title || '').replace(/[<>&'"]/g, ''),
       };
     });
 
@@ -384,7 +706,7 @@ ${allUrls
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>${
       u.imageUrl
-        ? `\n    <image:image>\n      <image:loc>${u.imageUrl}</image:loc>\n      <image:title>${u.title.replace(/[<>&'"]/g, '')}</image:title>\n    </image:image>`
+        ? `\n    <image:image>\n      <image:loc>${u.imageUrl}</image:loc>\n      <image:title>${u.title}</image:title>\n    </image:image>`
         : ''
     }
   </url>`
@@ -392,15 +714,15 @@ ${allUrls
   .join('\n')}
 </urlset>`;
 
-    res.set('Content-Type', 'application/xml');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Content-Type', 'application/xml; charset=utf-8');
+    res.set('Cache-Control', 'public, max-age=1800, s-maxage=3600');
     res.send(xml);
   } catch (err) {
     res.status(500).send('<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>');
   }
 });
 
-// 4.5 RSS Feed for Instant Google & Search Engine Updates
+// 4.5 RSS Feed for Instant Search Engine Discovery
 app.get(['/rss.xml', '/feed.xml', '/api/rss.xml'], async (req, res) => {
   try {
     await connectDB();
@@ -452,11 +774,16 @@ ${rssItems}
   }
 });
 
-// 5. Robots.txt — tells Google crawlers what to index
+// 5. Robots.txt — tells Google crawlers what to index and explicitly allows blog images
 app.get('/robots.txt', (req, res) => {
   res.set('Content-Type', 'text/plain');
   res.send(`User-agent: *
 Allow: /
+Allow: /blog-cover/
+Allow: /blogs/*/cover
+Allow: /api/blogs/*/cover
+Allow: /sitemap.xml
+Allow: /rss.xml
 Disallow: /admin
 Disallow: /login
 Disallow: /api/

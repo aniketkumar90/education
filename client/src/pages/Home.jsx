@@ -1,8 +1,20 @@
+import { useEffect } from 'react';
 import Hero from '../components/Hero';
 import BlogGrid from '../components/BlogGrid';
 import Sidebar from '../components/Sidebar';
 
 export default function Home() {
+  useEffect(() => {
+    document.title = 'DLEducationConnect - Distance Education & University Admissions Guide 2026';
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', 'https://dleducationconnect.in/');
+  }, []);
+
   return (
     <>
       <Hero />
