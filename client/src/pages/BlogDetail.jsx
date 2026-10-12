@@ -16,6 +16,21 @@ const SPECIALIZATIONS = {
 };
 
 /**
+ * Ensures HTML content is mobile-friendly:
+ * Wraps any tables in a responsive scrolling container so they don't break/cut off on phone screens.
+ */
+const makeHtmlResponsive = (html) => {
+  if (!html || typeof html !== 'string') return '';
+  return html.replace(
+    /(<div[^>]*class="[^"]*blog-table-responsive[^"]*"[^>]*>[\s\S]*?<\/div>)|(<table[\s\S]*?<\/table>)/gi,
+    (match, alreadyWrapped, unwrappedTable) => {
+      if (alreadyWrapped) return alreadyWrapped;
+      return `<div class="blog-table-responsive">${unwrappedTable}</div>`;
+    }
+  );
+};
+
+/**
  * Splits HTML blog content after ~5 lines of introductory content (approx 180-450 characters / 1st paragraph),
  * whether on mobile (phone view) or desktop (web view), for all existing and new blogs.
  */
@@ -667,7 +682,7 @@ export default function BlogDetail() {
                 style={styles.articleBody}
                 className="rich-blog-body"
                 dangerouslySetInnerHTML={{
-                  __html: contentBeforeForm,
+                  __html: makeHtmlResponsive(contentBeforeForm),
                 }}
               />
             )}
@@ -692,7 +707,7 @@ export default function BlogDetail() {
                 style={styles.articleBody}
                 className="rich-blog-body"
                 dangerouslySetInnerHTML={{
-                  __html: contentAfterForm,
+                  __html: makeHtmlResponsive(contentAfterForm),
                 }}
               />
             )}
@@ -797,6 +812,9 @@ const styles = {
     gridTemplateColumns: 'minmax(0, 1fr) 350px',
     gap: 36,
     alignItems: 'flex-start',
+    width: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
   },
   mainArticle: {
     background: '#ffffff',
@@ -804,6 +822,11 @@ const styles = {
     border: '1px solid #e2e8f0',
     padding: '36px 40px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+    width: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    overflowX: 'clip',
   },
   articleHeader: {
     marginBottom: 16,
@@ -816,6 +839,8 @@ const styles = {
     letterSpacing: '-0.3px',
     marginBottom: 10,
     textAlign: 'left',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
   },
   bylineRow: {
     display: 'flex',
@@ -1097,6 +1122,7 @@ const styles = {
   },
   phoneInput: {
     flex: 1,
+    minWidth: 0,
     height: '100%',
     border: 'none',
     outline: 'none',

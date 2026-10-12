@@ -177,6 +177,8 @@ const styles = {
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
   },
   bannerSub: {
     fontSize: 10.5,
@@ -242,6 +244,8 @@ const styles = {
     lineHeight: 1.42,
     color: '#111827',
     margin: 0,
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
   },
   titleLink: {
     color: '#111827',
@@ -250,6 +254,8 @@ const styles = {
     WebkitLineClamp: 3,
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
     transition: 'color 0.15s ease',
   },
 
