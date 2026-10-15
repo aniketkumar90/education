@@ -65,7 +65,7 @@ export default function Hero() {
           Welcome to
           <br />
           <span className="hero-title-highlight">Distance Education</span>{' '}
-          <span className="hero-title-brand">iConnect</span>
+          <span className="hero-title-brand">Connect</span>
         </h1>
 
         {/* Mission Subtitle */}
