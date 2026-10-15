@@ -288,11 +288,11 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
   });
 
   return (
-    <div style={isFullPage ? styles.cardFull : styles.card}>
+    <div className={`admin-inquiries-card ${isFullPage ? 'admin-inquiries-card-full' : ''}`} style={isFullPage ? styles.cardFull : styles.card}>
       {/* Header bar */}
-      <div style={styles.header}>
+      <div className="admin-inquiries-header" style={styles.header}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <h3 style={styles.title}>
               {isFullPage ? '🎓 All Inquiries & Admission Leads' : 'Recent Inquiries & Leads'}
             </h3>
@@ -303,11 +303,12 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div className="admin-inquiries-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={handleExportExcel}
             disabled={isExporting}
+            className="admin-btn-excel"
             style={styles.exportExcelBtn}
             title="Download leads in Excel (.csv) format for selected date range"
           >
@@ -317,6 +318,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
+            className="admin-btn-add-lead"
             style={styles.addLeadBtn}
           >
             + Add New Lead
@@ -326,13 +328,14 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
             type="button"
             onClick={fetchInquiries}
             title="Refresh Leads"
+            className="admin-btn-refresh"
             style={styles.refreshBtn}
           >
             ↻ Refresh
           </button>
 
           {!isFullPage && onViewAll && (
-            <button type="button" onClick={onViewAll} style={styles.viewAllBtn}>
+            <button type="button" onClick={onViewAll} className="admin-btn-view-all" style={styles.viewAllBtn}>
               View All Leads →
             </button>
           )}
@@ -340,9 +343,9 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
       </div>
 
       {/* Date Range & Quick Preset Filter Bar */}
-      <div style={styles.dateFilterRow}>
-        <div style={styles.datePickerGroup}>
-          <div style={styles.dateInputWrapper}>
+      <div className="admin-date-filter-row" style={styles.dateFilterRow}>
+        <div className="admin-date-picker-group" style={styles.datePickerGroup}>
+          <div className="admin-date-input-wrap" style={styles.dateInputWrapper}>
             <label style={styles.dateLabel}>From Date:</label>
             <input
               type="date"
@@ -351,7 +354,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
               style={styles.dateInput}
             />
           </div>
-          <div style={styles.dateInputWrapper}>
+          <div className="admin-date-input-wrap" style={styles.dateInputWrapper}>
             <label style={styles.dateLabel}>To Date:</label>
             <input
               type="date"
@@ -362,7 +365,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
           </div>
         </div>
 
-        <div style={styles.presetGroup}>
+        <div className="admin-date-preset-group" style={styles.presetGroup}>
           <span style={styles.presetLabel}>Quick Select:</span>
           <button
             type="button"
@@ -417,8 +420,8 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
       </div>
 
       {/* Filter & Search Bar */}
-      <div style={styles.filterBar}>
-        <div style={styles.searchBox}>
+      <div className="admin-filter-bar" style={styles.filterBar}>
+        <div className="admin-search-box" style={styles.searchBox}>
           <span style={{ color: '#94a3b8', fontSize: 13 }}>🔍</span>
           <input
             type="text"
@@ -438,7 +441,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
           )}
         </div>
 
-        <div style={styles.statusTabs}>
+        <div className="admin-status-tabs" style={styles.statusTabs}>
           {['ALL', ...STATUS_OPTIONS].map((status) => (
             <button
               key={status}
@@ -457,7 +460,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
       </div>
 
       {/* Table Content */}
-      <div style={styles.tableWrap}>
+      <div className="admin-table-wrap" style={styles.tableWrap}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px 16px', color: '#64748b' }}>
             <div className="skeleton" style={{ height: 40, marginBottom: 12, borderRadius: 8 }} />
@@ -758,8 +761,10 @@ const styles = {
     padding: '20px 24px',
     border: '1px solid #e2e8f0',
     boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-    flex: 1.6,
+    flex: '1.6 1 340px',
     minWidth: 0,
+    width: '100%',
+    boxSizing: 'border-box',
   },
   cardFull: {
     background: '#ffffff',
@@ -768,6 +773,7 @@ const styles = {
     border: '1px solid #e2e8f0',
     boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
     width: '100%',
+    boxSizing: 'border-box',
   },
   header: {
     display: 'flex',

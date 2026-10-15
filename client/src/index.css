@@ -696,6 +696,224 @@ img {
   }
 }
 
+/* ══════════════════════════════════════════════════════
+   ADMIN DASHBOARD PHONE & TABLET RESPONSIVE SUITE
+   ══════════════════════════════════════════════════════ */
+
+/* Dashboard 2-column stack on tablets & mobile */
+@media (max-width: 1024px) {
+  .admin-dashboard-two-col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+  }
+
+  .admin-dashboard-two-col > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Admin Phone & Small Screen Layouts (<= 768px) */
+@media (max-width: 768px) {
+  .admin-content-area {
+    padding: 12px 10px !important;
+  }
+
+  .admin-inquiries-card,
+  .admin-latest-articles-card {
+    padding: 16px 12px !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Header & Action Buttons */
+  .admin-inquiries-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .admin-inquiries-actions {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .admin-btn-excel {
+    flex: 1 1 130px !important;
+    justify-content: center !important;
+    padding: 9px 12px !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  .admin-btn-add-lead {
+    flex: 1 1 120px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 9px 12px !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-btn-refresh {
+    padding: 9px 12px !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-btn-view-all {
+    width: 100% !important;
+    text-align: right !important;
+    padding-top: 4px !important;
+  }
+
+  /* Date Filter Row on Mobile */
+  .admin-date-filter-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px 10px !important;
+    gap: 10px !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .admin-date-picker-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .admin-date-input-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .admin-date-input-wrap input[type="date"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 7px 8px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    min-height: 38px !important;
+  }
+
+  /* Horizontal swipeable chip bar for Quick Select */
+  .admin-date-preset-group {
+    display: flex !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    gap: 6px !important;
+    padding: 2px 0 6px 0 !important;
+    scrollbar-width: none !important;
+  }
+
+  .admin-date-preset-group::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .admin-date-preset-group > * {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-active-date-badge {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    font-size: 11px !important;
+  }
+
+  /* Search & Status Tabs on Mobile */
+  .admin-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .admin-search-box {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .admin-status-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    gap: 6px !important;
+    padding: 2px 0 6px 0 !important;
+    scrollbar-width: none !important;
+  }
+
+  .admin-status-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .admin-status-tabs > button {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* Table horizontal scrolling on mobile */
+  .admin-table-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Quick Actions strip on mobile */
+  .admin-quick-actions-card {
+    padding: 16px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .admin-quick-actions-buttons {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .admin-quick-actions-buttons > button {
+    flex: 1 1 120px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+}
+
 /* ── Blog Detail Page Responsive Layout ────────────── */
 .detail-layout-grid {
   width: 100%;

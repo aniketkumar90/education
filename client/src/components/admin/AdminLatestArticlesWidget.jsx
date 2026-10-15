@@ -6,7 +6,7 @@ export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEdit
   const displayBlogs = safeBlogs.slice(0, 4);
 
   return (
-    <div style={styles.card}>
+    <div className="admin-latest-articles-card" style={styles.card}>
       <div style={styles.header}>
         <h3 style={styles.title}>Latest Articles</h3>
         {onManage && (
@@ -83,8 +83,10 @@ const styles = {
     padding: '20px 22px',
     border: '1px solid #e2e8f0',
     boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-    flex: 1,
-    minWidth: 280,
+    flex: '1 1 300px',
+    minWidth: 0,
+    width: '100%',
+    boxSizing: 'border-box',
   },
   header: {
     display: 'flex',

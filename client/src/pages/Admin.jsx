@@ -217,7 +217,7 @@ export default function Admin({ user, setUser }) {
               />
 
               {/* Two Column Grid: Recent Inquiries Table & Latest Articles Widget */}
-              <div style={styles.dashboardTwoCol}>
+              <div className="admin-dashboard-two-col" style={styles.dashboardTwoCol}>
                 <AdminInquiriesTable
                   onViewAll={() => setActiveTab('inquiries')}
                   onStatsUpdate={(s) => setInquiryStats((prev) => ({ ...prev, ...s }))}

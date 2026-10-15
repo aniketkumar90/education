@@ -1,6 +1,6 @@
 export default function AdminQuickActions({ onAddPost, onViewInquiries, onManageBlogs }) {
   return (
-    <div style={styles.card}>
+    <div className="admin-quick-actions-card" style={styles.card}>
       <div style={styles.left}>
         <h3 style={styles.title}>Quick Actions</h3>
         <p style={styles.desc}>
@@ -8,7 +8,7 @@ export default function AdminQuickActions({ onAddPost, onViewInquiries, onManage
         </p>
       </div>
 
-      <div style={styles.actions}>
+      <div className="admin-quick-actions-buttons" style={styles.actions}>
         <button
           type="button"
           onClick={onAddPost}
