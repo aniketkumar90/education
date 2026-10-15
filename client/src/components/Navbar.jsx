@@ -181,14 +181,24 @@ export default function Navbar({ user, setUser }) {
 
         {/* Mobile hamburger */}
         <button
+          type="button"
           className="mobile-hamburger"
           style={styles.hamburger}
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Menu"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
         >
-          <span style={{ ...styles.bar, ...(menuOpen ? styles.barTop : {}) }} />
-          <span style={{ ...styles.bar, opacity: menuOpen ? 0 : 1 }} />
-          <span style={{ ...styles.bar, ...(menuOpen ? styles.barBot : {}) }} />
+          {menuOpen ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          )}
         </button>
       </div>
 
@@ -406,24 +416,15 @@ const styles = {
   },
   hamburger: {
     display: 'none',
-    flexDirection: 'column',
-    gap: 5,
-    background: 'none',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'transparent',
     border: 'none',
-    padding: 4,
+    padding: 6,
     cursor: 'pointer',
-    '@media (max-width: 768px)': { display: 'flex' },
+    color: 'var(--text)',
+    flexShrink: 0,
   },
-  bar: {
-    display: 'block',
-    width: 22,
-    height: 2,
-    background: 'var(--text)',
-    borderRadius: 2,
-    transition: 'all 0.25s ease',
-  },
-  barTop: { transform: 'translateY(7px) rotate(45deg)' },
-  barBot: { transform: 'translateY(-7px) rotate(-45deg)' },
   mobileMenu: {
     display: 'flex',
     flexDirection: 'column',

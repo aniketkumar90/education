@@ -223,15 +223,15 @@ input, textarea, select {
 /* ── Mobile Hamburger & Desktop Nav ─────────────────── */
 .mobile-hamburger {
   display: none;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 5px;
-  background: none;
+  justify-content: center;
+  background: transparent;
   border: none;
   cursor: pointer;
   padding: 6px;
+  color: var(--text);
   z-index: 10;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
@@ -239,11 +239,9 @@ input, textarea, select {
     display: none !important;
   }
   .mobile-hamburger {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
+    display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    justify-content: center !important;
   }
 }
 
@@ -848,6 +846,9 @@ img {
 /* ── Mobile Responsive Typography & Safety ─────────── */
 @media (max-width: 768px) {
   .rich-blog-body,
+  .rich-blog-body *,
+  .blog-rich-content,
+  .blog-rich-content *,
   .rich-blog-body p,
   .rich-blog-body [style*="text-align: justify"],
   .rich-blog-body [align="justify"] {
@@ -855,7 +856,10 @@ img {
     text-justify: auto !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
     letter-spacing: normal !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
   }
 }
 
