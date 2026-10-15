@@ -59,11 +59,27 @@ const getInquiries = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 100;
     const status = req.query.status || '';
     const search = req.query.search || '';
+    const startDate = req.query.startDate || '';
+    const endDate = req.query.endDate || '';
 
     const filter = {};
 
     if (status && status !== 'ALL') {
       filter.status = status.toUpperCase();
+    }
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        const s = new Date(startDate);
+        s.setHours(0, 0, 0, 0);
+        filter.createdAt.$gte = s;
+      }
+      if (endDate) {
+        const e = new Date(endDate);
+        e.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = e;
+      }
     }
 
     if (search) {
@@ -189,10 +205,116 @@ const deleteInquiry = async (req, res, next) => {
   }
 };
 
+// @desc    Export leads to Excel-compatible CSV file (filtered by date range, status, search)
+// @route   GET /api/inquiries/export
+// @access  Private/Admin
+const exportInquiries = async (req, res, next) => {
+  try {
+    const status = req.query.status || '';
+    const search = req.query.search || '';
+    const startDate = req.query.startDate || '';
+    const endDate = req.query.endDate || '';
+
+    const filter = {};
+
+    if (status && status !== 'ALL') {
+      filter.status = status.toUpperCase();
+    }
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        const s = new Date(startDate);
+        s.setHours(0, 0, 0, 0);
+        filter.createdAt.$gte = s;
+      }
+      if (endDate) {
+        const e = new Date(endDate);
+        e.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = e;
+      }
+    }
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { course: { $regex: search, $options: 'i' } },
+        { subCourse: { $regex: search, $options: 'i' } },
+        { source: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const inquiries = await Inquiry.find(filter).sort({ createdAt: -1 }).lean();
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = [
+      'S.No.',
+      'Inquiry Date',
+      'Time (IST)',
+      'Student Name',
+      'Mobile Number',
+      'Email Address',
+      'Course',
+      'Specialization',
+      'Study Mode',
+      'Admission Planning',
+      'Lead Source',
+      'Status',
+      'Counselor Notes',
+      'Lead ID',
+    ];
+
+    const rows = inquiries.map((item, index) => {
+      const d = item.createdAt ? new Date(item.createdAt) : null;
+      const dateStr = d ? d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }) : '';
+      const timeStr = d ? d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' }) : '';
+      const phoneClean = item.phone ? `\t${item.phone}` : '';
+
+      return [
+        index + 1,
+        escapeCsv(dateStr),
+        escapeCsv(timeStr),
+        escapeCsv(item.name || ''),
+        escapeCsv(phoneClean),
+        escapeCsv(item.email || ''),
+        escapeCsv(item.course || ''),
+        escapeCsv(item.subCourse || ''),
+        escapeCsv(item.studyMode || ''),
+        escapeCsv(item.admissionPlanning || ''),
+        escapeCsv(item.source || ''),
+        escapeCsv(item.status || 'NEW'),
+        escapeCsv(item.notes || ''),
+        escapeCsv(String(item._id || '')),
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+
+    const fileNameDate = startDate
+      ? `${startDate}${endDate && endDate !== startDate ? `_to_${endDate}` : ''}`
+      : new Date().toISOString().split('T')[0];
+    const filename = `DLEducationConnect_Leads_${fileNameDate}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.status(200).send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createInquiry,
   getInquiries,
   getInquiryStats,
+  exportInquiries,
   updateInquiry,
   deleteInquiry,
 };

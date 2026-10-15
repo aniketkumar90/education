@@ -23,18 +23,63 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
     notes: '',
   });
   const [addingLead, setAddingLead] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const formatYMD = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const [y, m, d] = parts;
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${d} ${months[parseInt(m, 10) - 1] || ''} ${y}`;
+  };
+
+  const handleQuickPreset = (preset) => {
+    const today = new Date();
+    if (preset === 'today') {
+      const t = formatYMD(today);
+      setStartDate(t);
+      setEndDate(t);
+    } else if (preset === 'yesterday') {
+      const y = new Date(Date.now() - 86400000);
+      const yStr = formatYMD(y);
+      setStartDate(yStr);
+      setEndDate(yStr);
+    } else if (preset === '7days') {
+      const past = new Date(Date.now() - 7 * 86400000);
+      setStartDate(formatYMD(past));
+      setEndDate(formatYMD(today));
+    } else if (preset === 'month') {
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      setStartDate(formatYMD(monthStart));
+      setEndDate(formatYMD(today));
+    } else if (preset === 'clear') {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
 
   useEffect(() => {
     fetchInquiries();
-  }, [selectedStatus]);
+  }, [selectedStatus, startDate, endDate]);
 
   const fetchInquiries = async () => {
     setLoading(true);
     setError('');
     try {
       const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : '';
-      const limitParam = isFullPage ? 100 : 10;
-      const { data } = await axios.get(`/api/inquiries?limit=${limitParam}${statusParam}`, {
+      const dateParams = `${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`;
+      const limitParam = isFullPage ? 500 : 50;
+      const { data } = await axios.get(`/api/inquiries?limit=${limitParam}${statusParam}${dateParams}`, {
         withCredentials: true,
       });
 
@@ -50,6 +95,104 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    try {
+      const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : '';
+      const dateParams = `${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`;
+      const searchParam = search.trim() ? `&search=${encodeURIComponent(search.trim())}` : '';
+
+      const response = await axios.get(
+        `/api/inquiries/export?export=true${statusParam}${dateParams}${searchParam}`,
+        {
+          withCredentials: true,
+          responseType: 'blob',
+        }
+      );
+
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const fileNameDate = startDate
+        ? `${startDate}${endDate && endDate !== startDate ? `_to_${endDate}` : ''}`
+        : new Date().toISOString().split('T')[0];
+      link.setAttribute('download', `DLEducationConnect_Leads_${fileNameDate}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn('Server export fallback, downloading client-side list:', err);
+      exportClientSideLeads();
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportClientSideLeads = () => {
+    const listToExport = filteredInquiries;
+    if (!listToExport || listToExport.length === 0) {
+      alert('No leads available to export for the selected date range.');
+      return;
+    }
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = [
+      'S.No.',
+      'Inquiry Date',
+      'Time (IST)',
+      'Student Name',
+      'Mobile Number',
+      'Email Address',
+      'Course',
+      'Specialization',
+      'Study Mode',
+      'Admission Planning',
+      'Lead Source',
+      'Status',
+      'Counselor Notes',
+    ];
+
+    const rows = listToExport.map((item, idx) => {
+      const d = item.createdAt ? new Date(item.createdAt) : new Date();
+      return [
+        idx + 1,
+        escapeCsv(d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' })),
+        escapeCsv(d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })),
+        escapeCsv(item.name || ''),
+        escapeCsv(item.phone ? `\t${item.phone}` : ''),
+        escapeCsv(item.email || ''),
+        escapeCsv(item.course || ''),
+        escapeCsv(item.subCourse || ''),
+        escapeCsv(item.studyMode || ''),
+        escapeCsv(item.admissionPlanning || ''),
+        escapeCsv(item.source || ''),
+        escapeCsv(item.status || 'NEW'),
+        escapeCsv(item.notes || ''),
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fileNameDate = startDate
+      ? `${startDate}${endDate && endDate !== startDate ? `_to_${endDate}` : ''}`
+      : new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `DLEducationConnect_Leads_${fileNameDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   const handleStatusChange = async (id, nextStatus) => {
@@ -163,6 +306,16 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <button
             type="button"
+            onClick={handleExportExcel}
+            disabled={isExporting}
+            style={styles.exportExcelBtn}
+            title="Download leads in Excel (.csv) format for selected date range"
+          >
+            {isExporting ? '⏳ Exporting...' : '📥 Download Excel'}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setShowAddModal(true)}
             style={styles.addLeadBtn}
           >
@@ -184,6 +337,83 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
             </button>
           )}
         </div>
+      </div>
+
+      {/* Date Range & Quick Preset Filter Bar */}
+      <div style={styles.dateFilterRow}>
+        <div style={styles.datePickerGroup}>
+          <div style={styles.dateInputWrapper}>
+            <label style={styles.dateLabel}>From Date:</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              style={styles.dateInput}
+            />
+          </div>
+          <div style={styles.dateInputWrapper}>
+            <label style={styles.dateLabel}>To Date:</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              style={styles.dateInput}
+            />
+          </div>
+        </div>
+
+        <div style={styles.presetGroup}>
+          <span style={styles.presetLabel}>Quick Select:</span>
+          <button
+            type="button"
+            onClick={() => handleQuickPreset('today')}
+            style={{
+              ...styles.presetBtn,
+              ...(startDate === formatYMD(new Date()) && endDate === formatYMD(new Date())
+                ? styles.presetBtnActive
+                : {}),
+            }}
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickPreset('yesterday')}
+            style={styles.presetBtn}
+          >
+            Yesterday
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickPreset('7days')}
+            style={styles.presetBtn}
+          >
+            Last 7 Days
+          </button>
+          <button
+            type="button"
+            onClick={() => handleQuickPreset('month')}
+            style={styles.presetBtn}
+          >
+            This Month
+          </button>
+          {(startDate || endDate) && (
+            <button
+              type="button"
+              onClick={() => handleQuickPreset('clear')}
+              style={styles.clearDateBtn}
+            >
+              ✕ Clear Filter
+            </button>
+          )}
+        </div>
+
+        {(startDate || endDate) && (
+          <div style={styles.activeDateBadge}>
+            📅 Showing: {startDate ? formatDateDisplay(startDate) : 'Beginning'} &rarr;{' '}
+            {endDate ? formatDateDisplay(endDate) : 'Today'}
+          </div>
+        )}
       </div>
 
       {/* Filter & Search Bar */}
@@ -566,6 +796,20 @@ const styles = {
     color: '#64748b',
     margin: '3px 0 0 0',
   },
+  exportExcelBtn: {
+    background: '#16a34a',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: 8,
+    padding: '7px 14px',
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    transition: 'background 0.15s ease',
+  },
   addLeadBtn: {
     background: '#0f172a',
     color: '#ffffff',
@@ -595,6 +839,90 @@ const styles = {
     fontWeight: 700,
     cursor: 'pointer',
     padding: 0,
+  },
+  dateFilterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    background: '#f8fafc',
+    border: '1px solid #e2e8f0',
+    borderRadius: 10,
+    padding: '10px 14px',
+    marginBottom: 14,
+    flexWrap: 'wrap',
+  },
+  datePickerGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  dateInputWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dateLabel: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#475569',
+  },
+  dateInput: {
+    border: '1px solid #cbd5e1',
+    borderRadius: 6,
+    padding: '5px 8px',
+    fontSize: 12,
+    color: '#0f172a',
+    background: '#ffffff',
+    outline: 'none',
+  },
+  presetGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  presetLabel: {
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#64748b',
+    marginRight: 2,
+  },
+  presetBtn: {
+    background: '#ffffff',
+    border: '1px solid #cbd5e1',
+    color: '#334155',
+    borderRadius: 6,
+    padding: '4px 10px',
+    fontSize: 11,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+  },
+  presetBtnActive: {
+    background: '#0f172a',
+    borderColor: '#0f172a',
+    color: '#ffffff',
+  },
+  clearDateBtn: {
+    background: '#fee2e2',
+    border: '1px solid #fecaca',
+    color: '#dc2626',
+    borderRadius: 6,
+    padding: '4px 10px',
+    fontSize: 11,
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  activeDateBadge: {
+    fontSize: 11.5,
+    fontWeight: 700,
+    color: '#0369a1',
+    background: '#e0f2fe',
+    border: '1px solid #bae6fd',
+    borderRadius: 6,
+    padding: '4px 10px',
   },
   filterBar: {
     display: 'flex',

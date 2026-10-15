@@ -4,6 +4,7 @@ const {
   createInquiry,
   getInquiries,
   getInquiryStats,
+  exportInquiries,
   updateInquiry,
   deleteInquiry,
 } = require('../controllers/inquiryController');
@@ -13,6 +14,7 @@ const { protect, adminOnly } = require('../middleware/authMiddleware');
 router.post('/', createInquiry);
 
 // Protected Admin routes: View, filter, update status, and delete leads
+router.get('/export', protect, adminOnly, exportInquiries);
 router.get('/', protect, adminOnly, getInquiries);
 router.get('/stats', protect, adminOnly, getInquiryStats);
 router.post('/admin', protect, adminOnly, createInquiry);
