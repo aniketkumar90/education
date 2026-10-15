@@ -35,6 +35,32 @@ export default function AdminInquiriesTable({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [lockPasswordInput, setLockPasswordInput] = useState('');
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [unlockErrMsg, setUnlockErrMsg] = useState('');
+
+  const handleUnlockSubmit = async (e) => {
+    if (e) e.preventDefault();
+    const clean = lockPasswordInput.trim();
+    if (!clean) {
+      setUnlockErrMsg('Please enter password');
+      return;
+    }
+    setIsUnlocking(true);
+    setUnlockErrMsg('');
+    try {
+      const res = await onUnlock(clean);
+      if (res && res.error) {
+        setUnlockErrMsg(res.error || 'Incorrect password');
+      } else {
+        setLockPasswordInput('');
+      }
+    } catch (err) {
+      setUnlockErrMsg(err?.response?.data?.message || 'Incorrect password');
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
 
   const formatYMD = (d) => {
     const year = d.getFullYear();
@@ -307,15 +333,6 @@ export default function AdminInquiriesTable({
     );
   });
 
-  if (!isUnlocked) {
-    return (
-      <AdminLeadsLockCard
-        variant={isFullPage ? 'page' : 'dashboard'}
-        onUnlock={onUnlock}
-      />
-    );
-  }
-
   return (
     <div className={`admin-inquiries-card ${isFullPage ? 'admin-inquiries-card-full' : ''}`} style={isFullPage ? styles.cardFull : styles.card}>
       {/* Header bar */}
@@ -325,7 +342,7 @@ export default function AdminInquiriesTable({
             <h3 style={styles.title}>
               {isFullPage ? '🎓 All Inquiries & Admission Leads' : 'Recent Inquiries & Leads'}
             </h3>
-            <span style={styles.countBadge}>{filteredInquiries.length} Leads</span>
+            {isUnlocked && <span style={styles.countBadge}>{filteredInquiries.length} Leads</span>}
           </div>
           <p style={styles.desc}>
             Direct student inquiries received via website admission forms & counseling popups
@@ -333,46 +350,50 @@ export default function AdminInquiriesTable({
         </div>
 
         <div className="admin-inquiries-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            disabled={isExporting}
-            className="admin-btn-excel"
-            style={styles.exportExcelBtn}
-            title="Download leads in Excel (.csv) format for selected date range"
-          >
-            {isExporting ? '⏳ Exporting...' : '📥 Download Excel'}
-          </button>
+          {isUnlocked && (
+            <>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={isExporting}
+                className="admin-btn-excel"
+                style={styles.exportExcelBtn}
+                title="Download leads in Excel (.csv) format for selected date range"
+              >
+                {isExporting ? '⏳ Exporting...' : '📥 Download Excel'}
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="admin-btn-add-lead"
-            style={styles.addLeadBtn}
-          >
-            + Add New Lead
-          </button>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="admin-btn-add-lead"
+                style={styles.addLeadBtn}
+              >
+                + Add New Lead
+              </button>
 
-          <button
-            type="button"
-            onClick={fetchInquiries}
-            title="Refresh Leads"
-            className="admin-btn-refresh"
-            style={styles.refreshBtn}
-          >
-            ↻ Refresh
-          </button>
+              <button
+                type="button"
+                onClick={fetchInquiries}
+                title="Refresh Leads"
+                className="admin-btn-refresh"
+                style={styles.refreshBtn}
+              >
+                ↻ Refresh
+              </button>
 
-          {onLock && (
-            <button
-              type="button"
-              onClick={onLock}
-              className="admin-btn-lock"
-              style={styles.lockBtn}
-              title="Lock leads and inquiries"
-            >
-              🔒 Lock Leads
-            </button>
+              {onLock && (
+                <button
+                  type="button"
+                  onClick={onLock}
+                  className="admin-btn-lock"
+                  style={styles.lockBtn}
+                  title="Lock leads and inquiries"
+                >
+                  🔒 Lock
+                </button>
+              )}
+            </>
           )}
 
           {!isFullPage && onViewAll && (
@@ -382,6 +403,39 @@ export default function AdminInquiriesTable({
           )}
         </div>
       </div>
+
+      {!isUnlocked ? (
+        <div style={styles.lockedArea}>
+          <form onSubmit={handleUnlockSubmit} style={styles.lockedForm}>
+            <input
+              type="password"
+              value={lockPasswordInput}
+              onChange={(e) => {
+                setLockPasswordInput(e.target.value);
+                if (unlockErrMsg) setUnlockErrMsg('');
+              }}
+              placeholder="Enter password..."
+              style={styles.lockedInput}
+              autoFocus
+            />
+            <button
+              type="submit"
+              disabled={isUnlocking || !lockPasswordInput.trim()}
+              style={{
+                ...styles.lockedBtn,
+                opacity: isUnlocking || !lockPasswordInput.trim() ? 0.7 : 1,
+                cursor: isUnlocking || !lockPasswordInput.trim() ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isUnlocking ? 'Unlocking...' : 'Unlock'}
+            </button>
+          </form>
+          {unlockErrMsg && (
+            <div style={styles.lockedError}>{unlockErrMsg}</div>
+          )}
+        </div>
+      ) : (
+        <>
 
       {/* Date Range & Quick Preset Filter Bar */}
       <div className="admin-date-filter-row" style={styles.dateFilterRow}>
@@ -790,6 +844,8 @@ export default function AdminInquiriesTable({
             </form>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
@@ -1218,5 +1274,52 @@ const styles = {
     alignItems: 'center',
     gap: 6,
     transition: 'all 0.15s ease',
+  },
+  lockedArea: {
+    padding: '60px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 180,
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  lockedForm: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
+    maxWidth: 380,
+  },
+  lockedInput: {
+    flex: 1,
+    padding: '11px 14px',
+    fontSize: 14,
+    borderRadius: 8,
+    border: '1.5px solid #cbd5e1',
+    background: '#ffffff',
+    color: '#0f172a',
+    outline: 'none',
+    boxSizing: 'border-box',
+  },
+  lockedBtn: {
+    padding: '11px 22px',
+    background: '#0f172a',
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 700,
+    borderRadius: 8,
+    border: 'none',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.15s ease',
+  },
+  lockedError: {
+    marginTop: 10,
+    fontSize: 13,
+    color: '#ef4444',
+    fontWeight: 600,
+    textAlign: 'center',
   },
 };

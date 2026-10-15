@@ -1354,3 +1354,11 @@ img {
     transform: rotate(360deg);
   }
 }
+
+@media (max-width: 480px) {
+  .admin-locked-form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+
