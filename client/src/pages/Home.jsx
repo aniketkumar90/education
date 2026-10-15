@@ -23,8 +23,8 @@ export default function Home() {
           {/* Blog articles grid */}
           <div style={styles.gridArea}>
             <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>Latest Articles</h2>
-              <p style={styles.sectionSub}>Stay up to date with the latest in education technology</p>
+              <h2 style={styles.sectionTitle}>Official University & Course Guides</h2>
+              <p style={styles.sectionSub}>Explore verified admission notices, eligibility criteria, fee structures & syllabus</p>
             </div>
             <BlogGrid />
           </div>
