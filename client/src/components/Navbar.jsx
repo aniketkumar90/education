@@ -180,7 +180,12 @@ export default function Navbar({ user, setUser }) {
         </nav>
 
         {/* Mobile hamburger */}
-        <button className="mobile-hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
+        <button
+          className="mobile-hamburger"
+          style={styles.hamburger}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menu"
+        >
           <span style={{ ...styles.bar, ...(menuOpen ? styles.barTop : {}) }} />
           <span style={{ ...styles.bar, opacity: menuOpen ? 0 : 1 }} />
           <span style={{ ...styles.bar, ...(menuOpen ? styles.barBot : {}) }} />

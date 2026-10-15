@@ -222,10 +222,15 @@ input, textarea, select {
 /* ── Mobile Hamburger & Desktop Nav ─────────────────── */
 .mobile-hamburger {
   display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
   cursor: pointer;
   padding: 6px;
+  z-index: 10;
 }
 
 @media (max-width: 768px) {
@@ -234,6 +239,10 @@ input, textarea, select {
   }
   .mobile-hamburger {
     display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 5px !important;
   }
 }
 
@@ -700,7 +709,6 @@ img {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  overflow-x: clip;
 }
 
 @media (max-width: 960px) {
@@ -729,11 +737,10 @@ img {
     gap: 16px !important;
   }
   .blog-main-article {
-    padding: 16px 14px !important;
+    padding: 18px 16px !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    overflow-x: clip !important;
   }
   .blog-main-title {
     font-size: 22px !important;
@@ -824,18 +831,33 @@ img {
 
 .rich-blog-body [style*="text-align: justify"],
 .rich-blog-body [align="justify"] {
-  text-align: justify !important;
+  text-align: justify;
 }
 
 .rich-blog-body [style*="text-align: center"],
 .rich-blog-body [align="center"] {
-  text-align: center !important;
+  text-align: center;
 }
 
 .rich-blog-body [style*="text-align: right"],
 .rich-blog-body [align="right"] {
-  text-align: right !important;
+  text-align: right;
 }
+
+/* ── Mobile Responsive Typography & Safety ─────────── */
+@media (max-width: 768px) {
+  .rich-blog-body,
+  .rich-blog-body p,
+  .rich-blog-body [style*="text-align: justify"],
+  .rich-blog-body [align="justify"] {
+    text-align: left !important;
+    text-justify: auto !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    letter-spacing: normal !important;
+  }
+}
+
 
 
 

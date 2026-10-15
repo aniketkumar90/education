@@ -826,7 +826,6 @@ const styles = {
     minWidth: 0,
     maxWidth: '100%',
     boxSizing: 'border-box',
-    overflowX: 'clip',
   },
   articleHeader: {
     marginBottom: 16,
