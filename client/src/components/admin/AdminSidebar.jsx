@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 
-export default function AdminSidebar({ activeTab, onSelectTab, onLogout, isOpen = false, onClose }) {
+export default function AdminSidebar({ activeTab, onSelectTab, onLogout, isOpen = false, onClose, isLeadsUnlocked = false }) {
   const navigate = useNavigate();
 
   const handleTabClick = (tabId) => {
@@ -45,13 +45,15 @@ export default function AdminSidebar({ activeTab, onSelectTab, onLogout, isOpen 
     {
       id: 'inquiries',
       label: 'Inquiries & Leads',
-      badge: 'New',
+      badge: isLeadsUnlocked ? 'Active' : '🔒 Locked',
+      badgeCustom: !isLeadsUnlocked ? { background: '#fef3c7', color: '#b45309' } : undefined,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
         </svg>
       ),
     },
+
     {
       id: 'users',
       label: 'User Accounts',
@@ -131,10 +133,16 @@ export default function AdminSidebar({ activeTab, onSelectTab, onLogout, isOpen 
                 {item.label}
               </span>
               {item.badge && (
-                <span style={isActive ? styles.badgeActive : styles.badgeInactive}>
+                <span
+                  style={{
+                    ...(isActive ? styles.badgeActive : styles.badgeInactive),
+                    ...(item.badgeCustom || {}),
+                  }}
+                >
                   {item.badge}
                 </span>
               )}
+
             </button>
           );
         })}

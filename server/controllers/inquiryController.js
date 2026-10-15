@@ -310,6 +310,28 @@ const exportInquiries = async (req, res, next) => {
   }
 };
 
+// @desc    Verify leads lock password
+// @route   POST /api/inquiries/verify-lock
+// @access  Private/Admin
+const verifyLeadsLockPassword = async (req, res) => {
+  const { password } = req.body;
+  const configuredPassword = (process.env.LEADS_LOCK_PASSWORD || '909792').toString().trim();
+
+  if (password && password.toString().trim() === configuredPassword) {
+    return res.json({
+      success: true,
+      message: 'Password verified successfully! Leads access unlocked.',
+      unlocked: true,
+    });
+  }
+
+  return res.status(401).json({
+    success: false,
+    unlocked: false,
+    message: 'Incorrect password. Access denied.',
+  });
+};
+
 module.exports = {
   createInquiry,
   getInquiries,
@@ -317,4 +339,6 @@ module.exports = {
   exportInquiries,
   updateInquiry,
   deleteInquiry,
+  verifyLeadsLockPassword,
 };
+

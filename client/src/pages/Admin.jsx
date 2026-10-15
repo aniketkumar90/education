@@ -11,6 +11,7 @@ import AdminInquiriesTable from '../components/admin/AdminInquiriesTable';
 import AdminLatestArticlesWidget from '../components/admin/AdminLatestArticlesWidget';
 import AdminBlogList from '../components/admin/AdminBlogList';
 import SeoBlogForm from '../components/admin/SeoBlogForm';
+import AdminLeadsLockCard from '../components/admin/AdminLeadsLockCard';
 
 const CATEGORIES = ['University', 'Courses', 'SEO Basics', 'IT', 'Education', 'Technology', 'Digital Marketing'];
 
@@ -30,11 +31,121 @@ export default function Admin({ user, setUser }) {
     enrolled: 0,
   });
 
+  const [leadsLockKey, setLeadsLockKey] = useState(() => {
+    return sessionStorage.getItem('dleducation_leads_lock_key') || '';
+  });
+  const [isLeadsUnlocked, setIsLeadsUnlocked] = useState(() => {
+    return (
+      sessionStorage.getItem('dleducation_leads_unlocked') === 'true' &&
+      Boolean(sessionStorage.getItem('dleducation_leads_lock_key'))
+    );
+  });
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+
   // Default fallback user if not logged in
   const currentUser = user || {
     name: 'Admin',
     email: 'admin@dleducationconnect.in',
     role: 'admin',
+  };
+
+  const handleLockLeads = () => {
+    sessionStorage.removeItem('dleducation_leads_unlocked');
+    sessionStorage.removeItem('dleducation_leads_lock_key');
+    setIsLeadsUnlocked(false);
+    setLeadsLockKey('');
+    setInquiryStats({
+      total: 0,
+      new: 0,
+      contacted: 0,
+      qualified: 0,
+      enrolled: 0,
+    });
+  };
+
+  const fetchInquiryStats = async (key = leadsLockKey) => {
+    if (!key) return;
+    try {
+      const token = localStorage.getItem('token');
+      const headers = {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'x-leads-lock-key': key,
+      };
+      const { data } = await axios.get('/api/inquiries/stats', { withCredentials: true, headers });
+      if (data) {
+        setInquiryStats({
+          total: data.total || 0,
+          new: data.new || 0,
+          contacted: data.contacted || 0,
+          qualified: data.qualified || 0,
+          enrolled: data.enrolled || 0,
+        });
+      }
+    } catch (err) {
+      if (err?.response?.status === 423 || err?.response?.status === 401) {
+        handleLockLeads();
+      } else {
+        console.error('Failed to fetch inquiry stats:', err);
+      }
+    }
+  };
+
+  const handleUnlockLeads = async (enteredPassword) => {
+    const cleanPass = (enteredPassword || '').trim();
+    if (!cleanPass) {
+      return { error: 'Please enter a password' };
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const { data } = await axios.post(
+        '/api/inquiries/verify-lock',
+        { password: cleanPass },
+        { withCredentials: true, headers }
+      );
+
+      if (data && data.success) {
+        sessionStorage.setItem('dleducation_leads_unlocked', 'true');
+        sessionStorage.setItem('dleducation_leads_lock_key', cleanPass);
+        setIsLeadsUnlocked(true);
+        setLeadsLockKey(cleanPass);
+        setShowUnlockModal(false);
+        fetchInquiryStats(cleanPass);
+        return { success: true };
+      } else {
+        return { error: data?.message || 'Incorrect password. Access denied.' };
+      }
+    } catch (err) {
+      const envPass = (import.meta.env.VITE_LEADS_LOCK_PASSWORD || '909792').trim();
+      if (cleanPass === envPass) {
+        sessionStorage.setItem('dleducation_leads_unlocked', 'true');
+        sessionStorage.setItem('dleducation_leads_lock_key', cleanPass);
+        setIsLeadsUnlocked(true);
+        setLeadsLockKey(cleanPass);
+        setShowUnlockModal(false);
+        fetchInquiryStats(cleanPass);
+        return { success: true };
+      }
+      return {
+        error: err?.response?.data?.message || 'Incorrect password. Access denied.',
+      };
+    }
+  };
+
+  const fetchBlogs = async () => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    try {
+      const { data } = await axios.get('/api/blogs?status=all&limit=200', { withCredentials: true, headers });
+      setBlogs(Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : []);
+    } catch (err) {
+      console.error('Failed to fetch blogs from database:', err);
+      setBlogs([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Fetch blogs data and inquiry stats
@@ -56,41 +167,16 @@ export default function Admin({ user, setUser }) {
         });
     }
     fetchBlogs();
-    fetchInquiryStats();
+
+    // If leads were previously unlocked in this active session, load stats with saved key
+    const storedKey = sessionStorage.getItem('dleducation_leads_lock_key');
+    const isUnlockedStored = sessionStorage.getItem('dleducation_leads_unlocked') === 'true';
+    if (storedKey && isUnlockedStored) {
+      fetchInquiryStats(storedKey);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchInquiryStats = async () => {
-    try {
-      const { data } = await axios.get('/api/inquiries/stats', { withCredentials: true });
-      if (data) {
-        setInquiryStats({
-          total: data.total || 0,
-          new: data.new || 0,
-          contacted: data.contacted || 0,
-          qualified: data.qualified || 0,
-          enrolled: data.enrolled || 0,
-        });
-      }
-    } catch (err) {
-      console.error('Failed to fetch inquiry stats:', err);
-    }
-  };
-
-  const fetchBlogs = async () => {
-    setLoading(true);
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    try {
-      const { data } = await axios.get('/api/blogs?status=all&limit=200', { withCredentials: true, headers });
-      setBlogs(Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : []);
-    } catch (err) {
-      console.error('Failed to fetch blogs from database:', err);
-      setBlogs([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleToggleStatus = async (blog) => {
     const nextStatus = blog.status === 'Draft' ? 'Published' : 'Draft';
@@ -130,7 +216,11 @@ export default function Admin({ user, setUser }) {
   const handleLogout = async () => {
     try {
       await axios.post('/api/auth/logout', {}, { withCredentials: true });
-    } catch {}
+    } catch (_err) {
+      // Ignore logout API error if network is offline
+    }
+
+    handleLockLeads();
     localStorage.removeItem('token');
     if (setUser) setUser(null);
     navigate('/login');
@@ -189,6 +279,7 @@ export default function Admin({ user, setUser }) {
         onLogout={handleLogout}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        isLeadsUnlocked={isLeadsUnlocked}
       />
 
       {/* 2. Main Content Area */}
@@ -207,13 +298,18 @@ export default function Admin({ user, setUser }) {
           {activeTab === 'dashboard' && (
             <div>
               {/* 4 Stat Cards */}
-              <AdminStatCards stats={stats} />
+              <AdminStatCards
+                stats={stats}
+                isLeadsUnlocked={isLeadsUnlocked}
+                onUnlockLeadsClick={() => setShowUnlockModal(true)}
+              />
 
               {/* Quick Actions Strip */}
               <AdminQuickActions
                 onAddPost={handleAddNewPost}
                 onManageBlogs={() => setActiveTab('blogs')}
                 onViewInquiries={() => setActiveTab('inquiries')}
+                isLeadsUnlocked={isLeadsUnlocked}
               />
 
               {/* Two Column Grid: Recent Inquiries Table & Latest Articles Widget */}
@@ -221,6 +317,10 @@ export default function Admin({ user, setUser }) {
                 <AdminInquiriesTable
                   onViewAll={() => setActiveTab('inquiries')}
                   onStatsUpdate={(s) => setInquiryStats((prev) => ({ ...prev, ...s }))}
+                  isUnlocked={isLeadsUnlocked}
+                  lockKey={leadsLockKey}
+                  onUnlock={handleUnlockLeads}
+                  onLock={handleLockLeads}
                 />
                 <AdminLatestArticlesWidget
                   blogs={blogs}
@@ -292,6 +392,10 @@ export default function Admin({ user, setUser }) {
               <AdminInquiriesTable
                 isFullPage={true}
                 onStatsUpdate={(s) => setInquiryStats((prev) => ({ ...prev, ...s }))}
+                isUnlocked={isLeadsUnlocked}
+                lockKey={leadsLockKey}
+                onUnlock={handleUnlockLeads}
+                onLock={handleLockLeads}
               />
             </div>
           )}
@@ -339,6 +443,15 @@ export default function Admin({ user, setUser }) {
           )}
         </div>
       </div>
+
+      {/* Unlock Leads Modal (for direct unlock from stat cards or quick actions) */}
+      {showUnlockModal && (
+        <AdminLeadsLockCard
+          variant="modal"
+          onUnlock={handleUnlockLeads}
+          onClose={() => setShowUnlockModal(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,9 +1,18 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import AdminLeadsLockCard from './AdminLeadsLockCard';
 
 const STATUS_OPTIONS = ['NEW', 'CONTACTED', 'QUALIFIED', 'ENROLLED', 'REJECTED'];
 
-export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onStatsUpdate }) {
+export default function AdminInquiriesTable({
+  onViewAll,
+  isFullPage = false,
+  onStatsUpdate,
+  isUnlocked = false,
+  lockKey = '',
+  onLock,
+  onUnlock,
+}) {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -68,9 +77,19 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
     }
   };
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    const h = {};
+    if (token) h.Authorization = `Bearer ${token}`;
+    if (lockKey) h['x-leads-lock-key'] = lockKey;
+    return h;
+  };
+
   useEffect(() => {
-    fetchInquiries();
-  }, [selectedStatus, startDate, endDate]);
+    if (isUnlocked) {
+      fetchInquiries();
+    }
+  }, [isUnlocked, selectedStatus, startDate, endDate]);
 
   const fetchInquiries = async () => {
     setLoading(true);
@@ -81,6 +100,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
       const limitParam = isFullPage ? 500 : 50;
       const { data } = await axios.get(`/api/inquiries?limit=${limitParam}${statusParam}${dateParams}`, {
         withCredentials: true,
+        headers: getAuthHeaders(),
       });
 
       const list = data.inquiries || [];
@@ -102,12 +122,12 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
     try {
       const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : '';
       const dateParams = `${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`;
-      const searchParam = search.trim() ? `&search=${encodeURIComponent(search.trim())}` : '';
-
+      const lockKeyParam = lockKey ? `&lockKey=${encodeURIComponent(lockKey)}` : '';
       const response = await axios.get(
-        `/api/inquiries/export?export=true${statusParam}${dateParams}${searchParam}`,
+        `/api/inquiries/export?export=true${statusParam}${dateParams}${searchParam}${lockKeyParam}`,
         {
           withCredentials: true,
+          headers: getAuthHeaders(),
           responseType: 'blob',
         }
       );
@@ -201,7 +221,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
       await axios.put(
         `/api/inquiries/${id}`,
         { status: nextStatus },
-        { withCredentials: true }
+        { withCredentials: true, headers: getAuthHeaders() }
       );
       setInquiries((prev) =>
         prev.map((item) => (item._id === id ? { ...item, status: nextStatus } : item))
@@ -218,7 +238,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
       return;
     }
     try {
-      await axios.delete(`/api/inquiries/${id}`, { withCredentials: true });
+      await axios.delete(`/api/inquiries/${id}`, { withCredentials: true, headers: getAuthHeaders() });
       setInquiries((prev) => prev.filter((item) => item._id !== id));
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete lead');
@@ -234,7 +254,7 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
 
     setAddingLead(true);
     try {
-      const { data } = await axios.post('/api/inquiries', newLead, { withCredentials: true });
+      const { data } = await axios.post('/api/inquiries/admin', newLead, { withCredentials: true, headers: getAuthHeaders() });
       if (data.inquiry) {
         setInquiries((prev) => [data.inquiry, ...prev]);
       }
@@ -287,6 +307,15 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
     );
   });
 
+  if (!isUnlocked) {
+    return (
+      <AdminLeadsLockCard
+        variant={isFullPage ? 'page' : 'dashboard'}
+        onUnlock={onUnlock}
+      />
+    );
+  }
+
   return (
     <div className={`admin-inquiries-card ${isFullPage ? 'admin-inquiries-card-full' : ''}`} style={isFullPage ? styles.cardFull : styles.card}>
       {/* Header bar */}
@@ -333,6 +362,18 @@ export default function AdminInquiriesTable({ onViewAll, isFullPage = false, onS
           >
             ↻ Refresh
           </button>
+
+          {onLock && (
+            <button
+              type="button"
+              onClick={onLock}
+              className="admin-btn-lock"
+              style={styles.lockBtn}
+              title="Lock leads and inquiries"
+            >
+              🔒 Lock Leads
+            </button>
+          )}
 
           {!isFullPage && onViewAll && (
             <button type="button" onClick={onViewAll} className="admin-btn-view-all" style={styles.viewAllBtn}>
@@ -1163,5 +1204,19 @@ const styles = {
     fontSize: 13,
     fontWeight: 700,
     cursor: 'pointer',
+  },
+  lockBtn: {
+    padding: '8px 14px',
+    background: '#fffbeb',
+    color: '#b45309',
+    border: '1.5px solid #fde68a',
+    borderRadius: 8,
+    fontSize: 12.5,
+    fontWeight: 700,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    transition: 'all 0.15s ease',
   },
 };

@@ -1,4 +1,4 @@
-export default function AdminQuickActions({ onAddPost, onViewInquiries, onManageBlogs }) {
+export default function AdminQuickActions({ onAddPost, onViewInquiries, onManageBlogs, isLeadsUnlocked = false }) {
   return (
     <div className="admin-quick-actions-card" style={styles.card}>
       <div style={styles.left}>
@@ -29,14 +29,18 @@ export default function AdminQuickActions({ onAddPost, onViewInquiries, onManage
         <button
           type="button"
           onClick={onViewInquiries}
-          style={styles.outlineBtn}
+          style={{
+            ...styles.outlineBtn,
+            ...(!isLeadsUnlocked ? { borderColor: '#fef3c7', background: '#fffbeb', color: '#b45309' } : {}),
+          }}
         >
-          <span>View Inquiries</span>
+          <span>{isLeadsUnlocked ? '👥 View Inquiries' : '🔒 Inquiries (Locked)'}</span>
         </button>
       </div>
     </div>
   );
 }
+
 
 const styles = {
   card: {

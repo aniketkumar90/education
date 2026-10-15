@@ -1,4 +1,4 @@
-export default function AdminStatCards({ stats = {} }) {
+export default function AdminStatCards({ stats = {}, isLeadsUnlocked = false, onUnlockLeadsClick }) {
   const safeStats = stats || {};
   const cards = [
     {
@@ -16,17 +16,35 @@ export default function AdminStatCards({ stats = {} }) {
     },
     {
       title: 'TOTAL LEADS / INQUIRIES',
-      value: safeStats.totalInquiries || 0,
-      subtext: `${safeStats.newLeads !== undefined ? safeStats.newLeads : 0} uncontacted leads`,
+      value: isLeadsUnlocked ? (
+        safeStats.totalInquiries || 0
+      ) : (
+        <span style={{ fontSize: 18, fontWeight: 700, color: '#d97706', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          🔒 Locked
+        </span>
+      ),
+      subtext: isLeadsUnlocked
+        ? `${safeStats.newLeads !== undefined ? safeStats.newLeads : 0} uncontacted leads`
+        : 'Password required • Click to unlock',
       subtextColor: '#d97706',
-      icon: (
+      icon: isLeadsUnlocked ? (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="4" width="20" height="16" rx="2"></rect>
           <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
         </svg>
+      ) : (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
       ),
-      iconBg: '#eff6ff',
-      iconColor: '#2563eb',
+      iconBg: isLeadsUnlocked ? '#eff6ff' : '#fffbeb',
+      iconColor: isLeadsUnlocked ? '#2563eb' : '#d97706',
+      isClickable: !isLeadsUnlocked,
+      onClick: !isLeadsUnlocked ? onUnlockLeadsClick : undefined,
+      cardStyle: !isLeadsUnlocked
+        ? { cursor: 'pointer', borderColor: '#fef3c7', background: 'linear-gradient(to bottom, #ffffff, #fffdfa)' }
+        : {},
     },
     {
       title: 'PUBLISHED BLOGS',
@@ -58,10 +76,23 @@ export default function AdminStatCards({ stats = {} }) {
     },
   ];
 
+
   return (
     <div className="admin-stat-grid" style={styles.grid}>
       {cards.map((card, idx) => (
-        <div key={idx} style={styles.card}>
+        <div
+          key={idx}
+          style={{ ...styles.card, ...(card.cardStyle || {}) }}
+          onClick={card.onClick}
+          role={card.onClick ? 'button' : undefined}
+          tabIndex={card.onClick ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (card.onClick && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              card.onClick();
+            }
+          }}
+        >
           <div style={styles.cardTop}>
             <div>
               <div style={styles.title}>{card.title}</div>
