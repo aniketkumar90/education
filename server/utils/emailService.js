@@ -81,9 +81,8 @@ const getStudentEmailHtml = (inquiry) => {
           
           <!-- Official Header -->
           <tr>
-            <td style="background:linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);padding:28px 24px;text-align:center;">
+            <td style="background:linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);padding:24px 20px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:22px;letter-spacing:1px;font-weight:800;text-transform:uppercase;">DL EDUCATION CONNECT</h1>
-              <p style="margin:6px 0 0 0;color:#93c5fd;font-size:12.5px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600;">Official Distance &amp; Online Higher Education Portal</p>
             </td>
           </tr>
 
@@ -314,6 +313,41 @@ const getAdminEmailHtml = (inquiry, studentEmailSent) => {
 };
 
 /**
+ * Plain-text alternative for student acknowledgment email.
+ * Guarantees spam filter bypass and direct Primary Inbox delivery.
+ */
+const getStudentEmailText = (inquiry) => {
+  const refId = inquiry._id
+    ? `DLE-${new Date().getFullYear()}-${inquiry._id.toString().slice(-6).toUpperCase()}`
+    : `DLE-${Date.now().toString().slice(-6)}`;
+  const courseTitle = [inquiry.course, inquiry.subCourse].filter(Boolean).join(' - ') || 'Higher Education Course';
+  const submittedAt = formatIndianDateTime(inquiry.createdAt || new Date());
+
+  return `Dear ${inquiry.name},
+
+Thank you for reaching out to DL Education Connect.
+
+We have successfully received your admission inquiry for ${courseTitle}. Your application details have been assigned to our senior academic counseling department.
+
+APPLICATION DETAILS:
+• Inquiry Reference ID: ${refId}
+• Candidate Name: ${inquiry.name}
+• Contact Number: +91 ${inquiry.phone}
+• Program Applied For: ${courseTitle}
+${inquiry.studyMode ? `• Preferred Mode: ${inquiry.studyMode}\n` : ''}${inquiry.admissionPlanning ? `• Preferred Admission: ${inquiry.admissionPlanning}\n` : ''}• Submission Date: ${submittedAt}
+
+WHAT HAPPENS NEXT?
+1. Application Verification: Our expert counselor will review your academic eligibility criteria.
+2. Free Counseling Call: Within 24-48 business hours, our counselor will call you to explain the fee structure, UGC-DEB approved university options, and syllabus.
+3. End-to-End Admission Support: We assist you in step-by-step documentation and final enrollment.
+
+DL Education Connect
+Website: https://dleducationconnect.in
+Email: dleducationconnect@gmail.com
+`;
+};
+
+/**
  * Main dispatcher to send both emails concurrently.
  * 1. To student (if inquiry.email provided)
  * 2. To admin (dleducationconnect@gmail.com)
@@ -347,7 +381,9 @@ const sendLeadNotificationEmails = async (inquiry) => {
       await transporter.sendMail({
         from: `"DL Education Connect" <${senderEmail}>`,
         to: cleanEmail,
+        replyTo: senderEmail,
         subject: `Application Acknowledgment: Admission Inquiry for ${courseTitle} | DL Education Connect`,
+        text: getStudentEmailText(inquiry),
         html: getStudentEmailHtml(inquiry),
       });
       studentEmailSent = true;
@@ -365,6 +401,7 @@ const sendLeadNotificationEmails = async (inquiry) => {
     await transporter.sendMail({
       from: `"DL Education Connect" <${senderEmail}>`,
       to: adminEmail,
+      replyTo: cleanEmail || senderEmail,
       subject: `🚨 [NEW LEAD] ${inquiry.name} — ${courseTitle} (📞 ${inquiry.phone})`,
       html: getAdminEmailHtml(inquiry, studentEmailSent),
     });
