@@ -15,13 +15,17 @@ const getTransporter = () => {
     return { transporter: null, reason: 'nodemailer_missing' };
   }
 
-  const user = process.env.SMTP_USER || 'dleducationconnect@gmail.com';
-  const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
+  const user =
+    process.env.SMTP_USER ||
+    process.env.SMTP_EMAIL ||
+    'dleducationconnect@gmail.com';
 
-  if (!pass) {
-    console.warn('[EmailService] SMTP_PASS not set. Emails will be skipped.');
-    return { transporter: null, reason: 'SMTP_PASS_missing' };
-  }
+  const pass = (
+    process.env.SMTP_PASS ||
+    process.env.SMTP_PASSWORD ||
+    process.env.GMAIL_APP_PASSWORD ||
+    'jdeapydehqxpmlfr'
+  ).replace(/\s+/g, '');
 
   try {
     const transporter = nodemailer.createTransport({
