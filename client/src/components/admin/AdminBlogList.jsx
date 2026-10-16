@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { calculateSeoScore } from '../../utils/seoCalculator';
 
 export default function AdminBlogList({
   blogs = [],
@@ -12,6 +13,7 @@ export default function AdminBlogList({
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('ALL'); // 'ALL' | 'Published' | 'Draft'
   const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [selectedSeoLevel, setSelectedSeoLevel] = useState('ALL'); // 'ALL' | 'EXCELLENT' | 'GOOD' | 'MODERATE' | 'POOR'
 
   const safeBlogs = useMemo(() => (Array.isArray(blogs) ? blogs.filter(Boolean) : []), [blogs]);
 
@@ -24,7 +26,7 @@ export default function AdminBlogList({
     return Array.from(set).sort();
   }, [safeBlogs]);
 
-  // Filter blogs based on search query, status, and category
+  // Filter blogs based on search query, status, category, and SEO level
   const filteredBlogs = useMemo(() => {
     const q = search.trim().toLowerCase();
 
@@ -43,7 +45,16 @@ export default function AdminBlogList({
         }
       }
 
-      // 3. Search Query Filter
+      // 3. SEO Level Filter
+      if (selectedSeoLevel !== 'ALL') {
+        const seo = calculateSeoScore(blog);
+        if (selectedSeoLevel === 'EXCELLENT' && seo.score < 80) return false;
+        if (selectedSeoLevel === 'GOOD' && (seo.score < 65 || seo.score >= 80)) return false;
+        if (selectedSeoLevel === 'MODERATE' && (seo.score < 45 || seo.score >= 65)) return false;
+        if (selectedSeoLevel === 'POOR' && seo.score >= 45) return false;
+      }
+
+      // 4. Search Query Filter
       if (!q) return true;
 
       const titleMatch = (blog.title || '').toLowerCase().includes(q);
@@ -56,14 +67,16 @@ export default function AdminBlogList({
 
       return titleMatch || keywordMatch || categoryMatch || slugMatch || authorMatch || tagsMatch;
     });
-  }, [safeBlogs, search, selectedStatus, selectedCategory]);
+  }, [safeBlogs, search, selectedStatus, selectedCategory, selectedSeoLevel]);
 
   const publishedCount = useMemo(
     () => safeBlogs.filter((b) => b.status !== 'Draft').length,
     [safeBlogs]
   );
   const draftCount = safeBlogs.length - publishedCount;
-  const isFiltered = Boolean(search.trim() || selectedStatus !== 'ALL' || selectedCategory !== 'ALL');
+  const isFiltered = Boolean(
+    search.trim() || selectedStatus !== 'ALL' || selectedCategory !== 'ALL' || selectedSeoLevel !== 'ALL'
+  );
 
   return (
     <div style={styles.card}>
@@ -124,6 +137,20 @@ export default function AdminBlogList({
           </select>
         )}
 
+        {/* SEO Level Dropdown Filter */}
+        <select
+          value={selectedSeoLevel}
+          onChange={(e) => setSelectedSeoLevel(e.target.value)}
+          style={styles.categorySelect}
+          title="Filter by SEO score level"
+        >
+          <option value="ALL">All SEO Levels</option>
+          <option value="EXCELLENT">🟢 Excellent (80-100)</option>
+          <option value="GOOD">🔵 Good (65-79)</option>
+          <option value="MODERATE">🟡 Moderate (45-64)</option>
+          <option value="POOR">🔴 Needs Work (&lt;45)</option>
+        </select>
+
         {/* Status Filter Tabs */}
         <div style={styles.statusTabs}>
           <button
@@ -177,6 +204,11 @@ export default function AdminBlogList({
                 {' '}in <strong>{selectedCategory}</strong>
               </span>
             )}
+            {selectedSeoLevel !== 'ALL' && (
+              <span>
+                {' '}with SEO Level <strong>{selectedSeoLevel}</strong>
+              </span>
+            )}
             {selectedStatus !== 'ALL' && (
               <span>
                 {' '}with status <strong>{selectedStatus}</strong>
@@ -189,6 +221,7 @@ export default function AdminBlogList({
               setSearch('');
               setSelectedStatus('ALL');
               setSelectedCategory('ALL');
+              setSelectedSeoLevel('ALL');
             }}
             style={styles.resetFiltersBtn}
           >
@@ -241,8 +274,9 @@ export default function AdminBlogList({
           <table style={styles.table}>
             <thead>
               <tr style={styles.thRow}>
-                <th style={{ ...styles.th, width: '40%' }}>TITLE & SEO DETAILS</th>
+                <th style={{ ...styles.th, width: '35%' }}>TITLE & SEO DETAILS</th>
                 <th style={styles.th}>CATEGORY</th>
+                <th style={styles.th}>SEO LEVEL</th>
                 <th style={styles.th}>STATUS</th>
                 <th style={styles.th}>VIEWS</th>
                 <th style={styles.th}>DATE</th>
@@ -265,6 +299,38 @@ export default function AdminBlogList({
                   </td>
                   <td style={styles.td}>
                     <span style={styles.catBadge}>{blog.category}</span>
+                  </td>
+                  <td style={styles.td}>
+                    {(() => {
+                      const seo = calculateSeoScore(blog);
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              padding: '3px 8px',
+                              borderRadius: 12,
+                              fontSize: 11.5,
+                              fontWeight: 800,
+                              background: seo.badgeBg,
+                              color: seo.badgeColor,
+                              border: `1px solid ${seo.badgeBorder}`,
+                              width: 'fit-content',
+                            }}
+                            title={`${seo.score}/100: ${seo.passedCount}/${seo.totalChecks} checks passed (${seo.summary})`}
+                          >
+                            <span>{seo.icon}</span>
+                            <span>{seo.score}/100</span>
+                            <span style={{ fontSize: 10, opacity: 0.9 }}>• {seo.level}</span>
+                          </span>
+                          <span style={{ fontSize: 10.5, color: '#64748b' }}>
+                            {seo.wordCount} words ({seo.passedCount}/{seo.totalChecks} passed)
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td style={styles.td}>
                     <button

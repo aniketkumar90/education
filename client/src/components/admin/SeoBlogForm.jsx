@@ -3,6 +3,7 @@ import axios from 'axios';
 import MainContentSection from './MainContentSection';
 import SidebarSettingsSection from './SidebarSettingsSection';
 import SeoMetadataFields from './SeoMetadataFields';
+import SeoLevelWidget from './SeoLevelWidget';
 
 export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blogToEdit = null }) {
   const [form, setForm] = useState({
@@ -241,6 +242,13 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       {/* Notifications */}
       {displaySuccess && <div style={styles.successBox}>{displaySuccess}</div>}
       {displayError && <div style={styles.errorBox}>⚠️ {displayError}</div>}
+
+      {/* Real-time SEO Level & Audit Breakdown */}
+      <SeoLevelWidget
+        form={form}
+        coverImage={coverImage}
+        featuredImageUrl={featuredImageUrl}
+      />
 
       {/* TOP SECTION: 2-Column Layout */}
       <div className="admin-form-grid">

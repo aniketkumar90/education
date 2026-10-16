@@ -1,3 +1,5 @@
+import SeoLevelWidget from './SeoLevelWidget';
+
 export default function SeoMetadataFields({ form, onChange, onAutoSlug }) {
   const metaTitleLen = (form.metaTitle || '').length;
   const metaDescLen = (form.metaDescription || '').length;
@@ -20,11 +22,14 @@ export default function SeoMetadataFields({ form, onChange, onAutoSlug }) {
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <div style={styles.icon}>🎯</div>
-        <div>
-          <h3 style={styles.title}>SEO & Metadata Settings</h3>
-          <p style={styles.subtitle}>Optimize search engine rankings, Google SERP snippet, and keywords</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+          <div style={styles.icon}>🎯</div>
+          <div>
+            <h3 style={styles.title}>SEO & Metadata Settings</h3>
+            <p style={styles.subtitle}>Optimize search engine rankings, Google SERP snippet, and keywords</p>
+          </div>
         </div>
+        <SeoLevelWidget form={form} compact={true} />
       </div>
 
       <div style={styles.body}>

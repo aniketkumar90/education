@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../../api/api';
+import { calculateSeoScore } from '../../utils/seoCalculator';
 
 export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEditBlog, onToggleStatus }) {
   const safeBlogs = Array.isArray(blogs) ? blogs.filter(Boolean) : [];
@@ -23,6 +24,7 @@ export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEdit
           displayBlogs.map((b) => {
             const imgSrc = getImageUrl(b.coverImage);
             const isDraft = b.status === 'Draft';
+            const seo = calculateSeoScore(b);
 
             return (
               <div key={b._id} style={styles.item}>
@@ -41,6 +43,23 @@ export default function AdminLatestArticlesWidget({ blogs = [], onManage, onEdit
                       {b.views || 0} views •{' '}
                       <span style={{ color: isDraft ? '#b45309' : '#15803d', fontWeight: 600 }}>
                         {isDraft ? '🟡 Draft' : '🟢 Published'}
+                      </span>
+                      {' • '}
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: seo.badgeColor,
+                          background: seo.badgeBg,
+                          padding: '1px 6px',
+                          borderRadius: 10,
+                          border: `1px solid ${seo.badgeBorder}`,
+                        }}
+                      >
+                        {seo.icon} SEO {seo.score}
                       </span>
                     </span>
                   </div>

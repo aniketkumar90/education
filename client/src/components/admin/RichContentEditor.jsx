@@ -282,9 +282,12 @@ export default function RichContentEditor({ value, onChange }) {
 
   // Save / Apply Link with attributes
   const handleSaveLink = (e) => {
-    if (e) e.preventDefault();
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     const { url, text, target, relType } = linkForm;
-    if (!url.trim()) {
+    if (!url || !url.trim()) {
       alert('Please enter a link URL');
       return;
     }
@@ -363,7 +366,11 @@ export default function RichContentEditor({ value, onChange }) {
   };
 
   // Remove existing link (Unlink)
-  const handleRemoveLink = () => {
+  const handleRemoveLink = (e) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     restoreSelection();
     const sel = window.getSelection();
     if (sel && sel.rangeCount) {
@@ -902,8 +909,8 @@ export default function RichContentEditor({ value, onChange }) {
               </button>
             </div>
 
-            {/* Modal Form */}
-            <form onSubmit={handleSaveLink} style={styles.modalBody}>
+            {/* Modal Body (div instead of form to avoid nested form submission & page refresh) */}
+            <div style={styles.modalBody}>
               {/* URL Field */}
               <div style={styles.formGroup}>
                 <label style={styles.formLabel}>
@@ -913,6 +920,13 @@ export default function RichContentEditor({ value, onChange }) {
                   type="text"
                   value={linkForm.url}
                   onChange={(e) => handleUrlChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSaveLink(e);
+                    }
+                  }}
                   placeholder="e.g., /blogs/bcom-distance-education or https://..."
                   required
                   autoFocus
@@ -947,6 +961,13 @@ export default function RichContentEditor({ value, onChange }) {
                   onChange={(e) =>
                     setLinkForm((prev) => ({ ...prev, text: e.target.value }))
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSaveLink(e);
+                    }
+                  }}
                   placeholder="Selected text or link title..."
                   style={styles.formInput}
                 />
@@ -1077,7 +1098,7 @@ export default function RichContentEditor({ value, onChange }) {
                 {linkForm.isEditing ? (
                   <button
                     type="button"
-                    onClick={handleRemoveLink}
+                    onClick={(e) => handleRemoveLink(e)}
                     style={styles.removeLinkBtn}
                     title="Remove this hyperlink"
                   >
@@ -1096,14 +1117,15 @@ export default function RichContentEditor({ value, onChange }) {
                     Cancel
                   </button>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={(e) => handleSaveLink(e)}
                     style={styles.saveLinkBtn}
                   >
                     {linkForm.isEditing ? '✓ Update Link' : '✓ Insert Link'}
                   </button>
                 </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
