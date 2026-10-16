@@ -1,10 +1,20 @@
-const nodemailer = require('nodemailer');
+let nodemailer;
+try {
+  nodemailer = require('nodemailer');
+} catch (e) {
+  console.warn('[EmailService] nodemailer not available:', e.message);
+}
 
 /**
  * Creates and returns the Nodemailer SMTP transporter.
  * Configured for Gmail SMTP using dleducationconnect@gmail.com
  */
 const getTransporter = () => {
+  if (!nodemailer) {
+    console.warn('[EmailService] nodemailer is not available. Skipping email.');
+    return null;
+  }
+
   const user = process.env.SMTP_USER || 'dleducationconnect@gmail.com';
   const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
