@@ -1,4 +1,5 @@
 const Inquiry = require('../models/inquiryModel');
+const { sendLeadNotificationEmails } = require('../utils/emailService');
 
 // @desc    Create new lead / admission inquiry (from website forms or popups)
 // @route   POST /api/inquiries
@@ -39,6 +40,13 @@ const createInquiry = async (req, res, next) => {
       notes: (notes || '').trim(),
       status: 'NEW',
     });
+
+    // Send official email notifications: Student acknowledgment + Admin lead alert
+    try {
+      await sendLeadNotificationEmails(inquiry);
+    } catch (emailErr) {
+      console.error('[InquiryController] Email notification error:', emailErr.message);
+    }
 
     res.status(201).json({
       success: true,
