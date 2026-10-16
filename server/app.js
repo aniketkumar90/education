@@ -385,7 +385,6 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
         : '';
 
     const cleanContent = (blog.content || '')
-      .replace(/text-align:\s*justify;?/gi, 'text-align: left;')
       .replace(/width:\s*([4-9]\d{2,}|[1-9]\d{3,})px;?/gi, 'max-width: 100%;');
 
     const preRenderedBody = `
@@ -398,7 +397,7 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
         <h1 style="font-size:32px;font-weight:800;color:#0f172a;line-height:1.3;margin:0 0 10px 0;text-align:left;">${blog.title}</h1>
         <div style="font-size:14px;color:#64748b;margin-bottom:18px;">By <strong style="color:#0f172a;">${authorName}</strong> / ${new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
         <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:8px;margin-bottom:24px;display:block;" />
-        <div class="blog-rich-content rich-blog-body" style="font-size:16px;color:#334155;line-height:1.8;text-align:left;">
+        <div class="blog-rich-content rich-blog-body" style="font-size:16px;color:#334155;line-height:1.8;">
           ${cleanContent}
         </div>
         ${recentLinksHtml}

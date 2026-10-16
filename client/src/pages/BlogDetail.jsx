@@ -21,10 +21,8 @@ const SPECIALIZATIONS = {
  */
 const makeHtmlResponsive = (html) => {
   if (!html || typeof html !== 'string') return '';
-  // 1. Remove forced text-align: justify so words don't stretch and clip on phone screens
-  let cleaned = html.replace(/text-align:\s*justify;?/gi, 'text-align: left;');
-  // 2. Prevent fixed pixel widths from causing mobile overflow
-  cleaned = cleaned.replace(/width:\s*([4-9]\d{2,}|[1-9]\d{3,})px;?/gi, 'max-width: 100%;');
+  // 1. Prevent fixed pixel widths from causing mobile overflow
+  let cleaned = html.replace(/width:\s*([4-9]\d{2,}|[1-9]\d{3,})px;?/gi, 'max-width: 100%;');
   // 3. Wrap tables in responsive scrolling container
   return cleaned.replace(
     /(<div[^>]*class="[^"]*blog-table-responsive[^"]*"[^>]*>[\s\S]*?<\/div>)|(<table[\s\S]*?<\/table>)/gi,
@@ -895,6 +893,7 @@ const styles = {
     lineHeight: 1.8,
     color: '#111827',
     marginBottom: 36,
+    textAlign: 'justify',
   },
   tagsContainer: {
     display: 'flex',
