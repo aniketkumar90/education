@@ -42,16 +42,19 @@ const createInquiry = async (req, res, next) => {
     });
 
     // Send official email notifications: Student acknowledgment + Admin lead alert
+    let emailStatus = null;
     try {
-      await sendLeadNotificationEmails(inquiry);
+      emailStatus = await sendLeadNotificationEmails(inquiry);
     } catch (emailErr) {
       console.error('[InquiryController] Email notification error:', emailErr.message);
+      emailStatus = { error: emailErr.message };
     }
 
     res.status(201).json({
       success: true,
       message: 'Inquiry received successfully! Our counselor will contact you soon.',
       inquiry,
+      emailStatus,
     });
   } catch (error) {
     next(error);

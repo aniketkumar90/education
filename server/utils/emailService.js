@@ -12,7 +12,7 @@ try {
 const getTransporter = () => {
   if (!nodemailer) {
     console.warn('[EmailService] nodemailer is not available. Skipping email.');
-    return null;
+    return { transporter: null, reason: 'nodemailer_missing' };
   }
 
   const user = process.env.SMTP_USER || 'dleducationconnect@gmail.com';
@@ -20,13 +20,18 @@ const getTransporter = () => {
 
   if (!pass) {
     console.warn('[EmailService] SMTP_PASS not set. Emails will be skipped.');
-    return null;
+    return { transporter: null, reason: 'SMTP_PASS_missing' };
   }
 
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass },
-  });
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+    });
+    return { transporter, reason: null };
+  } catch (err) {
+    return { transporter: null, reason: `createTransport_failed: ${err.message}` };
+  }
 };
 
 /**
@@ -310,9 +315,10 @@ const getAdminEmailHtml = (inquiry, studentEmailSent) => {
  * 2. To admin (dleducationconnect@gmail.com)
  */
 const sendLeadNotificationEmails = async (inquiry) => {
-  const transporter = getTransporter();
+  const { transporter, reason } = getTransporter();
   if (!transporter) {
-    return { adminEmailSent: false, studentEmailSent: false, skipped: true };
+    console.warn('[EmailService] Transporter not ready. Reason:', reason);
+    return { adminEmailSent: false, studentEmailSent: false, skipped: true, reason };
   }
 
   const senderEmail = process.env.SMTP_USER || 'dleducationconnect@gmail.com';
@@ -321,27 +327,33 @@ const sendLeadNotificationEmails = async (inquiry) => {
 
   let studentEmailSent = false;
   let adminEmailSent = false;
+  let studentError = null;
+  let adminError = null;
 
   // 1. Send confirmation to student if email is valid
+  const cleanEmail = (inquiry.email || '').trim().toLowerCase();
   const hasValidStudentEmail = Boolean(
-    inquiry.email &&
-    inquiry.email.includes('@') &&
-    !inquiry.email.endsWith('@example.com')
+    cleanEmail &&
+    cleanEmail.includes('@') &&
+    !cleanEmail.endsWith('@example.com')
   );
 
   if (hasValidStudentEmail) {
     try {
       await transporter.sendMail({
         from: `"DL Education Connect" <${senderEmail}>`,
-        to: inquiry.email,
+        to: cleanEmail,
         subject: `Application Acknowledgment: Admission Inquiry for ${courseTitle} | DL Education Connect`,
         html: getStudentEmailHtml(inquiry),
       });
       studentEmailSent = true;
-      console.log(`[EmailService] Student confirmation sent successfully to ${inquiry.email}`);
+      console.log(`[EmailService] Student confirmation sent successfully to ${cleanEmail}`);
     } catch (err) {
-      console.error(`[EmailService] Failed to send student email to ${inquiry.email}:`, err.message);
+      studentError = err.message;
+      console.error(`[EmailService] Failed to send student email to ${cleanEmail}:`, err.message);
     }
+  } else {
+    studentError = 'Invalid or missing student email address';
   }
 
   // 2. Send instant alert to Admin
@@ -355,10 +367,11 @@ const sendLeadNotificationEmails = async (inquiry) => {
     adminEmailSent = true;
     console.log(`[EmailService] Admin alert sent successfully to ${adminEmail}`);
   } catch (err) {
+    adminError = err.message;
     console.error(`[EmailService] Failed to send admin alert email to ${adminEmail}:`, err.message);
   }
 
-  return { adminEmailSent, studentEmailSent };
+  return { adminEmailSent, studentEmailSent, studentError, adminError, recipient: cleanEmail };
 };
 
 module.exports = {
