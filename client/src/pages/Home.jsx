@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Hero from '../components/Hero';
@@ -7,8 +7,12 @@ import BlogCard from '../components/BlogCard';
 export default function Home() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const sentinelRef = useRef(null);
 
   useEffect(() => {
     document.title = 'DLEducationConnect - Distance Education, Online Courses & Admission Guides 2026';
@@ -21,12 +25,16 @@ export default function Home() {
     canonical.setAttribute('href', 'https://dleducationconnect.in/');
   }, []);
 
+  // 1. Fetch initial batch on mount or category change
   useEffect(() => {
     let isMounted = true;
 
-    const fetchLatestBlogs = async () => {
+    const fetchInitialBlogs = async () => {
       setLoading(true);
       setError('');
+      setPage(1);
+      setHasMore(true);
+
       try {
         const params = { limit: 6, page: 1 };
         if (activeCategory && activeCategory !== 'All') {
@@ -37,6 +45,9 @@ export default function Home() {
         if (isMounted) {
           const list = Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : [];
           setBlogs(list);
+          const totalPages = typeof data?.pages === 'number' ? data.pages : 1;
+          const currentPage = typeof data?.page === 'number' ? data.page : 1;
+          setHasMore(currentPage < totalPages);
         }
       } catch (err) {
         if (isMounted) {
@@ -48,12 +59,75 @@ export default function Home() {
       }
     };
 
-    fetchLatestBlogs();
+    fetchInitialBlogs();
 
     return () => {
       isMounted = false;
     };
   }, [activeCategory]);
+
+  // 2. Fetch subsequent batches on scroll
+  const loadMore = useCallback(async () => {
+    if (loading || loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    const nextPage = page + 1;
+
+    try {
+      const params = { limit: 6, page: nextPage };
+      if (activeCategory && activeCategory !== 'All') {
+        params.category = activeCategory;
+      }
+
+      const { data } = await axios.get('/api/blogs', { params });
+      const newBlogs = Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : [];
+
+      if (newBlogs.length === 0) {
+        setHasMore(false);
+      } else {
+        setBlogs((prev) => {
+          const existingIds = new Set(prev.map((b) => b._id || b.slug));
+          const filtered = newBlogs.filter((b) => !existingIds.has(b._id || b.slug));
+          return [...prev, ...filtered];
+        });
+        setPage(nextPage);
+        const totalPages = typeof data?.pages === 'number' ? data.pages : nextPage;
+        const currentPage = typeof data?.page === 'number' ? data.page : nextPage;
+        setHasMore(currentPage < totalPages);
+      }
+    } catch (err) {
+      console.error('Error loading more blogs on scroll:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, hasMore, page, activeCategory]);
+
+  // 3. Attach IntersectionObserver to sentinel element
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    if (loading || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !loadingMore && hasMore && !loading) {
+          loadMore();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '350px', // trigger before reaching exact end
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMore, loading, hasMore, loadingMore]);
 
   return (
     <div style={styles.page}>
@@ -149,11 +223,35 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            <div style={styles.grid}>
-              {blogs.map((blog, idx) => (
-                <BlogCard key={blog._id || blog.slug || idx} blog={blog} index={idx} />
-              ))}
-            </div>
+            <>
+              <div style={styles.grid}>
+                {blogs.map((blog, idx) => (
+                  <BlogCard key={blog._id || blog.slug || idx} blog={blog} index={idx} />
+                ))}
+              </div>
+
+              {/* Sentinel trigger element observed for infinite scroll */}
+              <div ref={sentinelRef} style={styles.sentinel} />
+
+              {/* Loading more spinner */}
+              {loadingMore && (
+                <div style={styles.loadMoreWrap}>
+                  <div style={styles.spinner} />
+                  <span style={styles.loadMoreText}>Loading more blogs...</span>
+                </div>
+              )}
+
+              {/* End of content indicator */}
+              {!hasMore && blogs.length >= 6 && (
+                <div style={styles.endNotice}>
+                  <span style={styles.endDot} />
+                  <span>You've viewed all latest articles.</span>
+                  <Link to="/blogs" style={styles.endLink}>
+                    Explore all courses & guides →
+                  </Link>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -228,6 +326,57 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
     gap: 24,
   },
+  sentinel: {
+    height: 20,
+    width: '100%',
+    pointerEvents: 'none',
+    margin: '10px 0',
+  },
+  loadMoreWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    padding: '36px 0 16px',
+  },
+  spinner: {
+    width: 24,
+    height: 24,
+    border: '3px solid #f1e5e5',
+    borderTop: '3px solid #bc8f8f',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
+  },
+  loadMoreText: {
+    color: '#64748b',
+    fontSize: 14.5,
+    fontWeight: 500,
+  },
+  endNotice: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 40,
+    padding: '16px 20px',
+    background: '#faf7f5',
+    borderRadius: 12,
+    border: '1px dashed #e5d5d5',
+    color: '#64748b',
+    fontSize: 14,
+  },
+  endDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    backgroundColor: '#bc8f8f',
+  },
+  endLink: {
+    color: '#bc8f8f',
+    fontWeight: 700,
+    textDecoration: 'none',
+  },
   skeletonCard: {
     background: '#ffffff',
     borderRadius: 14,
@@ -252,3 +401,4 @@ const styles = {
     cursor: 'pointer',
   },
 };
+
