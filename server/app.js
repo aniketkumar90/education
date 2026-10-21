@@ -224,6 +224,13 @@ const buildHtmlPage = ({
   <title>${title}</title>
   <meta name="description" content="${description.replace(/"/g, '&quot;')}">
   <link rel="canonical" href="${canonicalUrl}">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/logo-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/logo-512.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <meta property="og:type" content="${ogType}">
   <meta property="og:title" content="${title.replace(/"/g, '&quot;')}">
   <meta property="og:description" content="${description.replace(/"/g, '&quot;')}">
