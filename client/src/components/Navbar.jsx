@@ -117,18 +117,6 @@ export default function Navbar({ user, setUser }) {
             {location.search.includes('Courses') && <span style={styles.activeBar} />}
           </Link>
 
-          {/* Admission Guides */}
-          <Link
-            to="/blogs?category=Admission"
-            style={{
-              ...styles.navLink,
-              ...(location.search.includes('Admission') ? styles.navLinkActive : {}),
-            }}
-          >
-            <span>Admission Guides</span>
-            {location.search.includes('Admission') && <span style={styles.activeBar} />}
-          </Link>
-
           {/* Blog */}
           <Link
             to="/blogs"
@@ -140,11 +128,6 @@ export default function Navbar({ user, setUser }) {
             <span>Blog</span>
             {location.pathname === '/blogs' && !location.search && <span style={styles.activeBar} />}
           </Link>
-
-          {/* About Us */}
-          <a href="#about" style={styles.navLink}>
-            <span>About Us</span>
-          </a>
 
           {/* Admin link if logged in */}
           {user?.role === 'admin' && (
@@ -246,15 +229,9 @@ export default function Navbar({ user, setUser }) {
           <Link to="/blogs?category=Courses" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
             Courses
           </Link>
-          <Link to="/blogs?category=Admission" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
-            Admission Guides
-          </Link>
           <Link to="/blogs" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
             Blog
           </Link>
-          <a href="#about" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
-            About Us
-          </a>
           <Link
             to="/blogs?category=Courses"
             style={{ ...styles.mobileLink, color: 'var(--primary)', fontWeight: 700 }}
