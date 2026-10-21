@@ -212,7 +212,7 @@ const getAdminEmailHtml = (inquiry, studentEmailSent) => {
               </span>
               <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:0.5px;">ADMISSION INQUIRY ALERT</h1>
               <p style="margin:6px 0 0 0;color:#94a3b8;font-size:12px;">
-                Auto-Confirmation to Student: ${studentEmailSent ? '<strong style="color:#22c55e;">✓ Delivered</strong>' : '<strong style="color:#eab308;">⚠ Skipped (No valid email)</strong>'}
+                Instant Lead Notification &bull; DLEducationConnect
               </p>
             </td>
           </tr>
@@ -363,47 +363,21 @@ const sendLeadNotificationEmails = async (inquiry) => {
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || 'dleducationconnect@gmail.com';
   const courseTitle = [inquiry.course, inquiry.subCourse].filter(Boolean).join(' - ') || 'Course';
 
-  let studentEmailSent = false;
+  const cleanEmail = (inquiry.email || '').trim().toLowerCase();
   let adminEmailSent = false;
-  let studentError = null;
   let adminError = null;
 
-  // 1. Send confirmation to student if email is valid
-  const cleanEmail = (inquiry.email || '').trim().toLowerCase();
-  const hasValidStudentEmail = Boolean(
-    cleanEmail &&
-    cleanEmail.includes('@') &&
-    !cleanEmail.endsWith('@example.com')
-  );
+  // Student auto-acknowledgment email is disabled per user request.
+  // Emails are now sent exclusively to the admin to inform them of new inquiries.
 
-  if (hasValidStudentEmail) {
-    try {
-      await transporter.sendMail({
-        from: `"DL Education Connect" <${senderEmail}>`,
-        to: cleanEmail,
-        replyTo: senderEmail,
-        subject: `Application Acknowledgment: Admission Inquiry for ${courseTitle} | DL Education Connect`,
-        text: getStudentEmailText(inquiry),
-        html: getStudentEmailHtml(inquiry),
-      });
-      studentEmailSent = true;
-      console.log(`[EmailService] Student confirmation sent successfully to ${cleanEmail}`);
-    } catch (err) {
-      studentError = err.message;
-      console.error(`[EmailService] Failed to send student email to ${cleanEmail}:`, err.message);
-    }
-  } else {
-    studentError = 'Invalid or missing student email address';
-  }
-
-  // 2. Send instant alert to Admin
+  // Send instant alert ONLY to Admin
   try {
     await transporter.sendMail({
       from: `"DL Education Connect" <${senderEmail}>`,
       to: adminEmail,
       replyTo: cleanEmail || senderEmail,
       subject: `🚨 [NEW LEAD] ${inquiry.name} — ${courseTitle} (📞 ${inquiry.phone})`,
-      html: getAdminEmailHtml(inquiry, studentEmailSent),
+      html: getAdminEmailHtml(inquiry, false),
     });
     adminEmailSent = true;
     console.log(`[EmailService] Admin alert sent successfully to ${adminEmail}`);
@@ -412,7 +386,7 @@ const sendLeadNotificationEmails = async (inquiry) => {
     console.error(`[EmailService] Failed to send admin alert email to ${adminEmail}:`, err.message);
   }
 
-  return { adminEmailSent, studentEmailSent, studentError, adminError, recipient: cleanEmail };
+  return { adminEmailSent, studentEmailSent: false, adminError, recipient: adminEmail };
 };
 
 module.exports = {
