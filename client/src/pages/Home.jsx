@@ -9,7 +9,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const sentinelRef = useRef(null);
@@ -33,7 +33,6 @@ export default function Home() {
       setLoading(true);
       setError('');
       setPage(1);
-      setHasMore(true);
 
       try {
         const params = { limit: 6, page: 1 };
@@ -45,9 +44,9 @@ export default function Home() {
         if (isMounted) {
           const list = Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : [];
           setBlogs(list);
-          const totalPages = typeof data?.pages === 'number' ? data.pages : 1;
-          const currentPage = typeof data?.page === 'number' ? data.page : 1;
-          setHasMore(currentPage < totalPages);
+          const total = typeof data?.pages === 'number' && data.pages > 0 ? data.pages : 1;
+          setTotalPages(total);
+          setPage(1);
         }
       } catch (err) {
         if (isMounted) {
@@ -66,12 +65,14 @@ export default function Home() {
     };
   }, [activeCategory]);
 
-  // 2. Fetch subsequent batches on scroll
+  // 2. Fetch subsequent batches on scroll in an endless loop
   const loadMore = useCallback(async () => {
-    if (loading || loadingMore || !hasMore) return;
+    if (loading || loadingMore || blogs.length === 0) return;
 
     setLoadingMore(true);
-    const nextPage = page + 1;
+
+    // When reaching or exceeding totalPages, loop back to page 1
+    const nextPage = page >= totalPages ? 1 : page + 1;
 
     try {
       const params = { limit: 6, page: nextPage };
@@ -82,36 +83,32 @@ export default function Home() {
       const { data } = await axios.get('/api/blogs', { params });
       const newBlogs = Array.isArray(data?.blogs) ? data.blogs.filter(Boolean) : [];
 
-      if (newBlogs.length === 0) {
-        setHasMore(false);
-      } else {
-        setBlogs((prev) => {
-          const existingIds = new Set(prev.map((b) => b._id || b.slug));
-          const filtered = newBlogs.filter((b) => !existingIds.has(b._id || b.slug));
-          return [...prev, ...filtered];
-        });
+      if (newBlogs.length > 0) {
+        setBlogs((prev) => [...prev, ...newBlogs]);
         setPage(nextPage);
-        const totalPages = typeof data?.pages === 'number' ? data.pages : nextPage;
-        const currentPage = typeof data?.page === 'number' ? data.page : nextPage;
-        setHasMore(currentPage < totalPages);
+        if (typeof data?.pages === 'number' && data.pages > 0) {
+          setTotalPages(data.pages);
+        }
       }
     } catch (err) {
       console.error('Error loading more blogs on scroll:', err);
     } finally {
-      setLoadingMore(false);
+      setTimeout(() => {
+        setLoadingMore(false);
+      }, 250);
     }
-  }, [loading, loadingMore, hasMore, page, activeCategory]);
+  }, [loading, loadingMore, page, totalPages, blogs.length, activeCategory]);
 
   // 3. Attach IntersectionObserver to sentinel element
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
-    if (loading || !hasMore) return;
+    if (loading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
-        if (entry.isIntersecting && !loadingMore && hasMore && !loading) {
+        if (entry.isIntersecting && !loadingMore && !loading) {
           loadMore();
         }
       },
@@ -127,7 +124,7 @@ export default function Home() {
     return () => {
       observer.disconnect();
     };
-  }, [loadMore, loading, hasMore, loadingMore]);
+  }, [loadMore, loading, loadingMore]);
 
   return (
     <div style={styles.page}>
@@ -226,11 +223,11 @@ export default function Home() {
             <>
               <div style={styles.grid}>
                 {blogs.map((blog, idx) => (
-                  <BlogCard key={blog._id || blog.slug || idx} blog={blog} index={idx} />
+                  <BlogCard key={`${blog._id || blog.slug || 'b'}-${idx}`} blog={blog} index={idx} />
                 ))}
               </div>
 
-              {/* Sentinel trigger element observed for infinite scroll */}
+              {/* Sentinel trigger element observed for infinite scroll loop */}
               <div ref={sentinelRef} style={styles.sentinel} />
 
               {/* Loading more spinner */}
@@ -238,17 +235,6 @@ export default function Home() {
                 <div style={styles.loadMoreWrap}>
                   <div style={styles.spinner} />
                   <span style={styles.loadMoreText}>Loading more blogs...</span>
-                </div>
-              )}
-
-              {/* End of content indicator */}
-              {!hasMore && blogs.length >= 6 && (
-                <div style={styles.endNotice}>
-                  <span style={styles.endDot} />
-                  <span>You've viewed all latest articles.</span>
-                  <Link to="/blogs" style={styles.endLink}>
-                    Explore all courses & guides →
-                  </Link>
                 </div>
               )}
             </>
@@ -352,31 +338,7 @@ const styles = {
     fontSize: 14.5,
     fontWeight: 500,
   },
-  endNotice: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 40,
-    padding: '16px 20px',
-    background: '#faf7f5',
-    borderRadius: 12,
-    border: '1px dashed #e5d5d5',
-    color: '#64748b',
-    fontSize: 14,
-  },
-  endDot: {
-    width: 6,
-    height: 6,
-    borderRadius: '50%',
-    backgroundColor: '#bc8f8f',
-  },
-  endLink: {
-    color: '#bc8f8f',
-    fontWeight: 700,
-    textDecoration: 'none',
-  },
+
   skeletonCard: {
     background: '#ffffff',
     borderRadius: 14,
