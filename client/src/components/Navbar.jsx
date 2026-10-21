@@ -63,19 +63,13 @@ export default function Navbar({ user, setUser }) {
     <header className="site-navbar" style={styles.header}>
       <div className="container" style={styles.inner}>
         {/* ── Brand Logo ──────────────────────────────── */}
-        <Link to="/" style={styles.brand} aria-label="DL Education Connect Home">
+        <Link to="/" style={styles.brand} aria-label="Distance Education">
           <div style={styles.logoBadge}>
             <img
-              src="/logo-512.png"
-              alt="DL Education Connect Logo"
-              width={38}
-              height={38}
+              src="/images/distance-education-logo-clean.png"
+              alt="Distance Education"
               style={styles.logoImg}
             />
-          </div>
-          <div style={styles.brandTextWrap}>
-            <span style={styles.brandMain}>DL EDUCATION</span>
-            <span style={styles.brandSub}>CONNECT</span>
           </div>
         </Link>
 
@@ -275,7 +269,6 @@ const styles = {
   brand: {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
     textDecoration: 'none',
     flexShrink: 0,
   },
@@ -283,30 +276,18 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    background: '#ffffff',
+    border: '1.5px solid #0f172a',
+    borderRadius: 4,
+    padding: '2px 4px',
+    boxShadow: '0 2px 6px rgba(15, 23, 42, 0.08)',
+    transition: 'transform 0.15s ease',
   },
   logoImg: {
-    width: 38,
-    height: 38,
+    height: 40,
+    width: 'auto',
     objectFit: 'contain',
-  },
-  brandTextWrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    lineHeight: 1.15,
-  },
-  brandMain: {
-    fontSize: 15.5,
-    fontWeight: 800,
-    color: '#0e2a47',
-    letterSpacing: '0.4px',
-    fontFamily: 'var(--font)',
-  },
-  brandSub: {
-    fontSize: 10.5,
-    fontWeight: 700,
-    color: '#bc8f8f',
-    letterSpacing: '2.5px',
-    fontFamily: 'var(--font)',
+    display: 'block',
   },
   navMenu: {
     display: 'flex',
