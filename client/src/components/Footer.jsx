@@ -1,9 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [showFloatingArrow, setShowFloatingArrow] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowFloatingArrow(true);
+      } else {
+        setShowFloatingArrow(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -88,7 +105,59 @@ export default function Footer() {
             )}
           </div>
         </div>
+
+        {/* ── Scroll To Top Up Arrow in Footer ── */}
+        <div style={styles.arrowRow}>
+          <button
+            type="button"
+            onClick={scrollToTop}
+            style={styles.backToTopBtn}
+            className="footer-scroll-top-btn"
+            aria-label="Scroll to top"
+            title="Scroll to top"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {/* Floating Scroll to Top button when user scrolls down */}
+      {showFloatingArrow && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          style={styles.floatingArrowBtn}
+          className="floating-scroll-top-btn"
+          aria-label="Scroll to top"
+          title="Scroll to top"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+          </svg>
+        </button>
+      )}
     </footer>
   );
 }
@@ -224,5 +293,41 @@ const styles = {
     justifyContent: 'center',
     textDecoration: 'none',
     transition: 'all 0.2s ease',
+  },
+  arrowRow: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: 24,
+  },
+  backToTopBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.08)',
+    border: '1px solid rgba(255, 255, 255, 0.18)',
+    color: '#ffffff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
+  floatingArrowBtn: {
+    position: 'fixed',
+    bottom: 24,
+    right: 24,
+    zIndex: 999,
+    width: 46,
+    height: 46,
+    borderRadius: '50%',
+    background: '#bc8f8f',
+    border: 'none',
+    color: '#ffffff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    boxShadow: '0 4px 18px rgba(188, 143, 143, 0.45)',
+    transition: 'all 0.25s ease',
   },
 };
