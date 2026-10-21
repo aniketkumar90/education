@@ -663,7 +663,7 @@ export default function BlogDetail() {
             <div style={styles.articleHeader}>
               <h1 className="blog-main-title" style={styles.postTitle}>{blog.title}</h1>
 
-              {/* Clean Byline: By Author / Published Date / Last Updated Date (Google & Public Freshness) */}
+              {/* Clean Byline: Single Published Date (replaced with updated date if modified) */}
               {(() => {
                 const pubDate = blog.publishDate || blog.createdAt;
                 const modDate = blog.updatedDate || blog.updatedAt || pubDate;
@@ -673,6 +673,7 @@ export default function BlogDetail() {
                   (blog.updatedDate && new Date(blog.updatedDate).toISOString().split('T')[0] !== new Date(pubDate).toISOString().split('T')[0]) ||
                   (modTime - pubTime > 24 * 60 * 60 * 1000)
                 );
+                const displayDate = isUpdated ? modDate : pubDate;
 
                 return (
                   <div className="blog-byline-row" style={styles.bylineRow}>
@@ -693,17 +694,8 @@ export default function BlogDetail() {
                       <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                     <span>
-                      Published: <time dateTime={new Date(pubDate).toISOString()} itemProp="datePublished">{formatDate(pubDate)}</time>
+                      Published: <time dateTime={new Date(displayDate).toISOString()} itemProp="datePublished">{formatDate(displayDate)}</time>
                     </span>
-                    {isUpdated && (
-                      <>
-                        <span style={styles.bylineSlash}>•</span>
-                        <span style={styles.bylineUpdatedBadge}>
-                          <span style={{ fontSize: 13 }}>🔄</span>
-                          <span>Last Updated: <strong style={{ color: '#047857' }}><time dateTime={new Date(modDate).toISOString()} itemProp="dateModified">{formatDate(modDate)}</time></strong></span>
-                        </span>
-                      </>
-                    )}
                   </div>
                 );
               })()}

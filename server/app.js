@@ -425,8 +425,9 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
     const cleanContent = (blog.content || '')
       .replace(/width:\s*([4-9]\d{2,}|[1-9]\d{3,})px;?/gi, 'max-width: 100%;');
 
-    const formattedPublish = new Date(publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const formattedModified = new Date(effectiveModified).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const displayDate = isUpdated ? effectiveModified : publishDate;
+    const displayIso = new Date(displayDate).toISOString();
+    const formattedDisplay = new Date(displayDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
     const preRenderedBody = `
       <article style="max-width:860px;margin:30px auto;padding:0 20px;">
@@ -437,14 +438,7 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
         </nav>
         <h1 style="font-size:32px;font-weight:800;color:#0f172a;line-height:1.3;margin:0 0 10px 0;text-align:left;">${blog.title}</h1>
         <div style="font-size:14px;color:#64748b;margin-bottom:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <span>By <strong style="color:#0f172a;">${authorName}</strong></span>
-          <span style="color:#94a3b8;">/</span>
-          <span>Published: <time datetime="${pubIso}" itemprop="datePublished">${formattedPublish}</time></span>
-          ${isUpdated ? `
-          <span style="color:#94a3b8;">&bull;</span>
-          <span style="display:inline-flex;align-items:center;gap:4px;color:#16a34a;font-weight:700;">
-            <span>🔄</span> Last Updated: <time datetime="${modIso}" itemprop="dateModified">${formattedModified}</time>
-          </span>` : ''}
+          <span>Published: <time datetime="${displayIso}" itemprop="datePublished">${formattedDisplay}</time></span>
         </div>
         <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:8px;margin-bottom:24px;display:block;" />
         <div class="blog-rich-content rich-blog-body" style="font-size:16px;color:#334155;line-height:1.8;">

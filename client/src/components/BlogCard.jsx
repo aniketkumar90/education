@@ -44,11 +44,19 @@ export default function BlogCard({ blog, index = 0 }) {
   if (!blog) return null;
 
   const pubDate = blog.publishDate || blog.createdAt;
+  const modDate = blog.updatedDate || blog.updatedAt || pubDate;
+  const pubTime = new Date(pubDate).getTime();
+  const modTime = new Date(modDate).getTime();
+  const isUpdated = Boolean(
+    (blog.updatedDate && new Date(blog.updatedDate).toISOString().split('T')[0] !== new Date(pubDate).toISOString().split('T')[0]) ||
+    (modTime - pubTime > 24 * 60 * 60 * 1000)
+  );
+  const displayDate = isUpdated ? modDate : pubDate;
   const coverUrl = getImageUrl(blog.coverImage);
   const blogLink = `/blog/${blog.slug || blog._id}`;
   const catStyle = getCategoryStyle(blog.category);
   const excerpt = getExcerpt(blog);
-  const dateFormatted = formatDate(pubDate);
+  const dateFormatted = formatDate(displayDate);
 
   return (
     <article className="modern-blog-card" style={styles.card}>
