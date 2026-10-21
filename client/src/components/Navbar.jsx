@@ -60,7 +60,8 @@ export default function Navbar({ user, setUser }) {
   const isHomeActive = location.pathname === '/';
 
   return (
-    <header className="site-navbar" style={styles.header}>
+    <>
+      <header className="site-navbar" style={styles.header}>
       <div className="container" style={styles.inner}>
         {/* ── Brand Logo ──────────────────────────────── */}
         <Link to="/" style={styles.brand} aria-label="Distance Education">
@@ -243,19 +244,27 @@ export default function Navbar({ user, setUser }) {
           )}
         </div>
       )}
-    </header>
+      </header>
+      {/* Spacer so page content starts below the fixed 74px header */}
+      <div style={styles.headerSpacer} aria-hidden="true" />
+    </>
   );
 }
 
 const styles = {
   header: {
-    position: 'sticky',
+    position: 'fixed',
     top: 0,
-    zIndex: 100,
+    left: 0,
+    right: 0,
+    width: '100%',
+    zIndex: 1000,
     background: '#ffffff',
     borderBottom: '1px solid #f1f5f9',
     boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
-    transition: 'box-shadow 0.2s ease',
+  },
+  headerSpacer: {
+    height: 74,
   },
   inner: {
     display: 'flex',
