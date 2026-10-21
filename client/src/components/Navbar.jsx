@@ -249,13 +249,11 @@ export default function Navbar({ user, setUser }) {
 
 const styles = {
   header: {
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
+    position: 'relative',
+    zIndex: 50,
     background: '#ffffff',
     borderBottom: '1px solid #f1f5f9',
     boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-    transition: 'all 0.2s ease',
   },
   inner: {
     display: 'flex',
