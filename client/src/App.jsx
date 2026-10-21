@@ -70,20 +70,26 @@ export default function App() {
 
   useEffect(() => {
     // Check if user is logged in via stored token or cookie
-    // Only clear the token on explicit 401 (unauthorized) — NOT on network errors or cold-start failures
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers = token && token !== 'null' && token !== 'undefined'
+      ? { Authorization: `Bearer ${token}` }
+      : {};
+
     axios
-      .get('/api/auth/me', { withCredentials: true })
+      .get('/api/auth/me', { withCredentials: true, headers })
       .then((res) => {
         if (res.data) setUser(res.data.user || res.data);
       })
       .catch((err) => {
         const status = err?.response?.status;
-        if (status === 401 || status === 403) {
-          // Only clear token if server explicitly rejects the session
+        const msg = err?.response?.data?.message || '';
+        // Only clear token if server explicitly confirms token is expired/invalid, not when token was just omitted
+        if (status === 401 && (msg.includes('invalid') || msg.includes('expired'))) {
           setUser(null);
           localStorage.removeItem('token');
+        } else if (status === 403) {
+          setUser(null);
         }
-        // For network errors, DB cold starts, 5xx — keep token, allow retry on next navigation
       })
       .finally(() => {
         setAuthLoading(false);

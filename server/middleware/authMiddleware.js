@@ -5,11 +5,11 @@ const protect = async (req, res, next) => {
   let token = req.cookies ? req.cookies.jwt : undefined;
 
   // Fallback: Authorization header Bearer token (important for API callers / mobile / cross-site fallback)
-  if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
+  if (!token && req.headers.authorization && /^Bearer\s+/i.test(req.headers.authorization)) {
+    token = req.headers.authorization.replace(/^Bearer\s+/i, '').trim();
   }
 
-  if (!token) {
+  if (!token || token === 'null' || token === 'undefined') {
     res.status(401);
     return next(new Error('Not authorized, no token provided'));
   }

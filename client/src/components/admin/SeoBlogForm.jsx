@@ -28,6 +28,33 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [error, setError] = useState('');
+  const [copiedSuccess, setCopiedSuccess] = useState(false);
+
+  // Auto-save draft locally so user never loses work even on session timeout
+  useEffect(() => {
+    if (form.content && form.content.length > 50) {
+      try {
+        const draftKey = `dleducation_autosave_${blogToEdit?._id || form.slug || 'active'}`;
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({ form, featuredImageUrl, savedAt: new Date().toISOString() })
+        );
+      } catch (_e) {
+        // storage quota
+      }
+    }
+  }, [form, featuredImageUrl, blogToEdit]);
+
+  const handleCopyContent = () => {
+    try {
+      const fullText = `# ${form.title}\n\n${form.excerpt}\n\n${form.content}`;
+      navigator.clipboard.writeText(fullText);
+      setCopiedSuccess(true);
+      setTimeout(() => setCopiedSuccess(false), 3000);
+    } catch (_e) {
+      alert('Could not auto-copy to clipboard. Please manually select and copy text.');
+    }
+  };
 
   // Populate form if blogToEdit is provided
   useEffect(() => {
@@ -188,6 +215,9 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       }
 
       const createdSlug = responseData?.slug || form.slug;
+      try {
+        localStorage.removeItem(`dleducation_autosave_${blogToEdit?._id || form.slug || 'active'}`);
+      } catch (_e) {}
       const msg = isDbEdit
         ? `💾 Blog post updated successfully! URL: /blog/${createdSlug}`
         : targetStatus === 'Draft'
@@ -248,7 +278,79 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
     <form onSubmit={(e) => handleSubmit(e, form.status)} style={styles.form}>
       {/* Notifications */}
       {displaySuccess && <div style={styles.successBox}>{displaySuccess}</div>}
-      {displayError && <div style={styles.errorBox}>⚠️ {displayError}</div>}
+      {displayError && (
+        <div style={styles.errorBox}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>⚠️ {displayError}</span>
+              {displayError.toLowerCase().includes('not authorized') && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <a
+                    href="/login"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      background: '#0f172a',
+                      color: '#ffffff',
+                      padding: '7px 14px',
+                      borderRadius: 6,
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    🔑 Open Login in New Tab
+                  </a>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSubmit(e, form.status)}
+                    style={{
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '7px 14px',
+                      borderRadius: 6,
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    🔄 Retry Save Now
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyContent}
+                    style={{
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      border: '1.5px solid #cbd5e1',
+                      padding: '7px 12px',
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {copiedSuccess ? '✅ Copied to Clipboard!' : '📋 Copy All Text as Backup'}
+                  </button>
+                </div>
+              )}
+            </div>
+            {displayError.toLowerCase().includes('not authorized') && (
+              <p style={{ margin: 0, fontSize: 13, color: '#7f1d1d', lineHeight: 1.5 }}>
+                <strong>Dhyaan dein:</strong> Aapka likha hua blog content bilkul safe hai (hata nahi hai).
+                Kripya is page ko refresh mat karein. Upar diye gaye <strong>"Open Login in New Tab"</strong> button par click karke Admin account login karein, fir yaha wapas aakar <strong>"Retry Save Now"</strong> par click karein.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Real-time SEO Level & Audit Breakdown */}
       <SeoLevelWidget

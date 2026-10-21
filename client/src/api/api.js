@@ -14,19 +14,31 @@ if (API_BASE_URL) {
 axios.defaults.withCredentials = true;
 
 // Attach Authorization header if token exists in localStorage (dual cookie + bearer protection)
-axios.interceptors.request.use((config) => {
+const attachAuthToken = (config) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (token && token !== 'null' && token !== 'undefined') {
+    if (config.headers && typeof config.headers.set === 'function') {
+      if (!config.headers.get('Authorization')) {
+        config.headers.set('Authorization', `Bearer ${token}`);
+      }
+    } else if (config.headers) {
+      if (!config.headers.Authorization && !config.headers['Authorization']) {
+        config.headers.Authorization = `Bearer ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
   }
   return config;
-});
+};
+
+axios.interceptors.request.use(attachAuthToken);
 
 // Pre-configured axios instance for explicit use
 export const api = axios.create({
   baseURL: API_BASE_URL || undefined,
   withCredentials: true,
 });
+api.interceptors.request.use(attachAuthToken);
 
 const DEFAULT_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80';
