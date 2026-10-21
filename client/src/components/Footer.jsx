@@ -43,7 +43,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Column 2: Quick Links */}
+          {/* Column 2: Quick Links (Matching Header Links) */}
           <div>
             <h4 style={styles.colTitle}>Quick Links</h4>
             <ul style={styles.linkList}>
@@ -57,29 +57,7 @@ export default function Footer() {
                 <Link to="/blogs?category=Courses" style={styles.link}>Courses</Link>
               </li>
               <li>
-                <Link to="/blogs?category=Admission" style={styles.link}>Admission Guides</Link>
-              </li>
-              <li>
                 <Link to="/blogs" style={styles.link}>Blog</Link>
-              </li>
-              <li>
-                <a href="#about" style={styles.link}>About Us</a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 3: Useful Links */}
-          <div>
-            <h4 style={styles.colTitle}>Useful Links</h4>
-            <ul style={styles.linkList}>
-              <li>
-                <a href="#about" style={styles.link}>Privacy Policy</a>
-              </li>
-              <li>
-                <a href="#about" style={styles.link}>Terms &amp; Conditions</a>
-              </li>
-              <li>
-                <a href="#about" style={styles.link}>Contact Us</a>
               </li>
             </ul>
           </div>
@@ -150,7 +128,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: '1.2fr 1fr 1fr 1.3fr',
+    gridTemplateColumns: '1.4fr 1fr 1.3fr',
     gap: 40,
     paddingBottom: 48,
   },
