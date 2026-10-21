@@ -14,10 +14,6 @@ export default function Footer() {
     }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <footer id="about" className="site-footer" style={styles.footer}>
       <div className="container">
@@ -92,27 +88,6 @@ export default function Footer() {
             )}
           </div>
         </div>
-
-        {/* ── Bottom Bar ──────────────────────────────── */}
-        <div style={styles.bottomBar}>
-          <p style={styles.copyright}>
-            © 2026 DL Education Connect. All rights reserved.
-          </p>
-
-          {/* Scroll to Top Button */}
-          <button
-            type="button"
-            onClick={scrollToTop}
-            style={styles.backToTopBtn}
-            aria-label="Back to top"
-            title="Scroll to top"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="19" x2="12" y2="5"></line>
-              <polyline points="5 12 12 5 19 12"></polyline>
-            </svg>
-          </button>
-        </div>
       </div>
     </footer>
   );
@@ -123,14 +98,14 @@ const styles = {
     background: '#0a192f',
     color: '#94a3b8',
     paddingTop: 56,
-    paddingBottom: 24,
+    paddingBottom: 48,
     marginTop: 'auto',
   },
   grid: {
     display: 'grid',
     gridTemplateColumns: '1.4fr 1fr 1.3fr',
     gap: 40,
-    paddingBottom: 48,
+    paddingBottom: 0,
   },
   brandCol: {
     display: 'flex',
@@ -248,32 +223,6 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     textDecoration: 'none',
-    transition: 'all 0.2s ease',
-  },
-  bottomBar: {
-    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-    paddingTop: 22,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  copyright: {
-    fontSize: 13,
-    color: '#64748b',
-  },
-  backToTopBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    background: 'rgba(255, 255, 255, 0.06)',
-    border: '1px solid rgba(255, 255, 255, 0.15)',
-    color: '#94a3b8',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
     transition: 'all 0.2s ease',
   },
 };
