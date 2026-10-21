@@ -1452,10 +1452,26 @@ img {
   transform: translateY(-1px);
 }
 
+/* ── Hero Banner with Background Image ─────────────── */
+.hero-banner-section {
+  background-image: linear-gradient(
+    to right,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0.96) 38%,
+    rgba(255, 255, 255, 0.75) 55%,
+    rgba(255, 255, 255, 0.25) 75%,
+    transparent 100%
+  ), url('/images/hero-banner-wide.jpg');
+  background-size: cover;
+  background-position: right center;
+  background-repeat: no-repeat;
+  background-color: #fbfcfe;
+}
+
 /* ── Responsive Layouts ─────────────────────────────── */
-@media (max-width: 1024px) {
-  .categories-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+@media (max-width: 1200px) {
+  .hero-handwritten-note {
+    right: 28% !important;
   }
 }
 
@@ -1466,17 +1482,20 @@ img {
   .mobile-hamburger {
     display: flex !important;
   }
-  .hero-section .container {
-    grid-template-columns: 1fr !important;
-    gap: 36px !important;
-    text-align: left;
+  .hero-banner-section {
+    background-image: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.94) 0%,
+      rgba(255, 255, 255, 0.90) 60%,
+      rgba(255, 255, 255, 0.82) 100%
+    ), url('/images/hero-banner-wide.jpg') !important;
+    background-position: 80% center !important;
   }
   .hero-handwritten-note {
-    left: 10px !important;
-    top: -24px !important;
+    display: none !important;
   }
-  .categories-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+  .hero-text-wrap {
+    max-width: 100% !important;
   }
   .site-footer .container > div:first-child {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1484,16 +1503,24 @@ img {
   }
 }
 
-@media (max-width: 560px) {
-  .categories-grid {
-    grid-template-columns: 1fr !important;
+@media (max-width: 600px) {
+  .hero-banner-section {
+    background-image: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.91) 60%,
+      rgba(255, 255, 255, 0.85) 100%
+    ), url('/images/hero-banner-wide.jpg') !important;
+    background-position: center center !important;
+  }
+  .hero-banner-section .container {
+    min-height: auto !important;
+    padding-top: 36px !important;
+    padding-bottom: 44px !important;
   }
   .site-footer .container > div:first-child {
     grid-template-columns: 1fr !important;
     gap: 28px !important;
-  }
-  .hero-handwritten-note {
-    display: none !important;
   }
   .nav-explore-btn {
     display: none !important;

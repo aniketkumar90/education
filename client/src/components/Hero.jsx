@@ -13,10 +13,10 @@ export default function Hero() {
   };
 
   return (
-    <section className="hero-section" style={styles.section}>
+    <section className="hero-banner-section" style={styles.section}>
       <div className="container" style={styles.container}>
-        {/* ── Left Content Column ──────────────────────── */}
-        <div style={styles.leftCol}>
+        {/* ── Main Text Content (Over Background) ───────── */}
+        <div className="hero-text-wrap" style={styles.textWrap}>
           {/* Pill Badge */}
           <div style={styles.badge}>
             <svg
@@ -71,53 +71,39 @@ export default function Hero() {
           </form>
         </div>
 
-        {/* ── Right Visual Column with Stacked Books & Cap ─── */}
-        <div style={styles.rightCol}>
-          {/* Handwritten Annotation with Curved Doodle Arrow */}
-          <div className="hero-handwritten-note" style={styles.handwrittenWrap}>
-            <div style={styles.handwrittenText}>
-              Better
-              <br />
-              Education
-              <br />
-              Brighter
-              <br />
-              Future
-            </div>
-            {/* Curved SVG Doodle Arrow */}
-            <svg
-              width="50"
-              height="60"
-              viewBox="0 0 50 60"
-              fill="none"
-              style={styles.doodleArrow}
-            >
-              <path
-                d="M10 5 C 28 8, 42 22, 36 48"
-                stroke="#1e293b"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray="1 0"
-              />
-              <path
-                d="M26 42 L 36 49 L 41 38"
-                stroke="#1e293b"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+        {/* ── Floating Handwritten Annotation pointing to background books ─── */}
+        <div className="hero-handwritten-note" style={styles.handwrittenWrap}>
+          <div style={styles.handwrittenText}>
+            Better
+            <br />
+            Education
+            <br />
+            Brighter
+            <br />
+            Future
           </div>
-
-          {/* Book Stack with Mortarboard Image */}
-          <div style={styles.imageCard}>
-            <img
-              src="/images/hero-books-cap.jpg"
-              alt="Education Stack of Books with Graduation Cap"
-              style={styles.heroImg}
-              loading="eager"
+          <svg
+            width="50"
+            height="60"
+            viewBox="0 0 50 60"
+            fill="none"
+            style={styles.doodleArrow}
+          >
+            <path
+              d="M10 5 C 28 8, 42 22, 36 48"
+              stroke="#1e293b"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="1 0"
             />
-          </div>
+            <path
+              d="M26 42 L 36 49 L 41 38"
+              stroke="#1e293b"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
       </div>
     </section>
@@ -126,23 +112,23 @@ export default function Hero() {
 
 const styles = {
   section: {
-    background: 'linear-gradient(180deg, #fbfcfe 0%, #f4f7fb 100%)',
-    padding: '52px 0 60px',
-    overflow: 'hidden',
     position: 'relative',
+    overflow: 'hidden',
     borderBottom: '1px solid #f1f5f9',
   },
   container: {
-    display: 'grid',
-    gridTemplateColumns: '1.05fr 0.95fr',
-    alignItems: 'center',
-    gap: 48,
     position: 'relative',
+    minHeight: 520,
+    display: 'flex',
+    alignItems: 'center',
+    paddingTop: 56,
+    paddingBottom: 64,
   },
-  leftCol: {
+  textWrap: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
+    maxWidth: 580,
     zIndex: 2,
   },
   badge: {
@@ -155,12 +141,12 @@ const styles = {
     padding: '6px 14px',
     fontSize: 13,
     fontWeight: 600,
-    marginBottom: 22,
+    marginBottom: 20,
     boxShadow: '0 1px 3px rgba(29, 104, 225, 0.08)',
   },
   headline: {
     fontFamily: 'var(--font)',
-    fontSize: 'clamp(38px, 4.8vw, 56px)',
+    fontSize: 'clamp(34px, 4.8vw, 54px)',
     fontWeight: 800,
     color: '#0e233d',
     lineHeight: 1.15,
@@ -170,8 +156,8 @@ const styles = {
   subtitle: {
     fontSize: 15.5,
     lineHeight: 1.6,
-    color: '#64748b',
-    maxWidth: 480,
+    color: '#475569',
+    maxWidth: 490,
     marginBottom: 28,
   },
   searchBar: {
@@ -183,7 +169,7 @@ const styles = {
     padding: '5px 6px 5px 18px',
     width: '100%',
     maxWidth: 480,
-    boxShadow: '0 4px 18px rgba(15, 23, 42, 0.06)',
+    boxShadow: '0 6px 20px rgba(15, 23, 42, 0.08)',
     transition: 'all 0.2s ease',
   },
   searchIcon: {
@@ -213,16 +199,10 @@ const styles = {
     boxShadow: '0 2px 8px rgba(29, 104, 225, 0.28)',
     transition: 'all 0.2s ease',
   },
-  rightCol: {
-    position: 'relative',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   handwrittenWrap: {
     position: 'absolute',
-    top: -12,
-    left: -20,
+    top: '22%',
+    right: '34%',
     zIndex: 5,
     display: 'flex',
     flexDirection: 'column',
@@ -231,7 +211,7 @@ const styles = {
   },
   handwrittenText: {
     fontFamily: '"Caveat", "Comic Sans MS", cursive, sans-serif',
-    fontSize: 18,
+    fontSize: 19,
     lineHeight: 1.15,
     color: '#1e293b',
     fontWeight: 700,
@@ -239,22 +219,7 @@ const styles = {
     textAlign: 'center',
   },
   doodleArrow: {
-    marginLeft: 26,
-    marginTop: -4,
-  },
-  imageCard: {
-    width: '100%',
-    maxWidth: 520,
-    borderRadius: 18,
-    overflow: 'hidden',
-    boxShadow: '0 18px 40px rgba(15, 23, 42, 0.1)',
-    border: '1px solid #e2e8f0',
-    background: '#ffffff',
-  },
-  heroImg: {
-    width: '100%',
-    height: 'auto',
-    display: 'block',
-    objectFit: 'cover',
+    marginLeft: 28,
+    marginTop: -2,
   },
 };
