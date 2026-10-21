@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Hero from '../components/Hero';
-import ExploreCategories from '../components/ExploreCategories';
 import BlogCard from '../components/BlogCard';
 
 export default function Home() {
@@ -56,26 +55,12 @@ export default function Home() {
     };
   }, [activeCategory]);
 
-  const handleCategorySelect = (categoryKey) => {
-    setActiveCategory((prev) => (prev === categoryKey ? 'All' : categoryKey));
-    const section = document.getElementById('latest-blogs-section');
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <div style={styles.page}>
       {/* ── 1. Hero Section ──────────────────────────── */}
       <Hero />
 
-      {/* ── 2. Explore Categories ─────────────────────── */}
-      <ExploreCategories
-        activeCategory={activeCategory}
-        onSelectCategory={handleCategorySelect}
-      />
-
-      {/* ── 3. Latest Blogs Section ───────────────────── */}
+      {/* ── 2. Latest Blogs Section ───────────────────── */}
       <section id="latest-blogs-section" style={styles.blogsSection}>
         <div className="container">
           {/* Section Header */}
@@ -184,7 +169,7 @@ const styles = {
     flex: 1,
   },
   blogsSection: {
-    padding: '16px 0 72px',
+    padding: '52px 0 72px',
     background: '#ffffff',
   },
   sectionHeader: {
