@@ -350,10 +350,19 @@ export default function AdminBlogList({
                   <td style={{ ...styles.td, color: '#64748b', fontSize: 13, fontWeight: 600 }}>
                     {blog.views || 0}
                   </td>
-                  <td style={{ ...styles.td, color: '#94a3b8', fontSize: 12 }}>
-                    {blog.publishDate || blog.createdAt
-                      ? new Date(blog.publishDate || blog.createdAt).toLocaleDateString()
-                      : 'Recent'}
+                  <td style={{ ...styles.td, color: '#64748b', fontSize: 11.5, lineHeight: 1.4 }}>
+                    <div>
+                      <span style={{ color: '#94a3b8' }}>Pub: </span>
+                      {blog.publishDate || blog.createdAt
+                        ? new Date(blog.publishDate || blog.createdAt).toLocaleDateString()
+                        : 'Recent'}
+                    </div>
+                    {blog.updatedDate && new Date(blog.updatedDate).toISOString().split('T')[0] !== (blog.publishDate ? new Date(blog.publishDate).toISOString().split('T')[0] : '') && (
+                      <div style={{ color: '#16a34a', fontWeight: 600 }}>
+                        <span style={{ opacity: 0.85 }}>Upd: </span>
+                        {new Date(blog.updatedDate).toLocaleDateString()}
+                      </div>
+                    )}
                   </td>
                   <td style={{ ...styles.td, textAlign: 'right' }}>
                     <div style={styles.actionGroup}>

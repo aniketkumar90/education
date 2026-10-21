@@ -147,6 +147,7 @@ const createBlog = async (req, res, next) => {
       content,
       authorName,
       publishDate,
+      updatedDate,
       status,
     } = req.body;
 
@@ -210,6 +211,7 @@ const createBlog = async (req, res, next) => {
       authorName: authorName || (req.user && req.user.name) || 'Aniket Kumar',
       author: req.user?._id || undefined,
       publishDate: publishDate ? new Date(publishDate) : new Date(),
+      updatedDate: updatedDate ? new Date(updatedDate) : (publishDate ? new Date(publishDate) : new Date()),
       status: isPublished ? 'Published' : 'Draft',
       published: isPublished,
     });
@@ -251,6 +253,7 @@ const updateBlog = async (req, res, next) => {
       content,
       authorName,
       publishDate,
+      updatedDate,
       status,
       published,
     } = req.body;
@@ -302,7 +305,12 @@ const updateBlog = async (req, res, next) => {
     if (excerpt !== undefined) blog.excerpt = excerpt;
     if (content !== undefined) blog.content = content;
     if (authorName !== undefined) blog.authorName = authorName;
-    if (publishDate !== undefined) blog.publishDate = new Date(publishDate);
+    if (publishDate !== undefined && publishDate) blog.publishDate = new Date(publishDate);
+    if (updatedDate !== undefined && updatedDate) {
+      blog.updatedDate = new Date(updatedDate);
+    } else {
+      blog.updatedDate = new Date();
+    }
 
     if (tags !== undefined) {
       blog.tags = Array.isArray(tags)

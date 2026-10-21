@@ -466,7 +466,7 @@ export default function BlogDetail() {
     const title = `${blog.metaTitle || blog.title} | DLEducationConnect`;
     const description = blog.metaDescription || blog.excerpt || '';
     const publishDate = blog.publishDate || blog.createdAt;
-    const modifiedDate = blog.updatedAt || publishDate;
+    const modifiedDate = blog.updatedDate || blog.updatedAt || publishDate;
     const authorName = blog.authorName || 'DLEducationConnect';
     const keywords = Array.isArray(blog.tags) ? blog.tags.join(', ') : (blog.focusKeyword || '');
 
@@ -500,6 +500,7 @@ export default function BlogDetail() {
     setMeta("meta[name='keywords']", 'name', 'keywords', keywords);
     setMeta("meta[name='author']", 'name', 'author', authorName);
     setMeta("meta[name='robots']", 'name', 'robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
+    setMeta("meta[name='revised']", 'name', 'revised', new Date(modifiedDate).toISOString());
 
     // 3. Canonical URL
     setLink('canonical', blogUrl);
@@ -512,6 +513,7 @@ export default function BlogDetail() {
     setMeta("meta[property='og:image']", 'property', 'og:image', imgUrl);
     setMeta("meta[property='og:image:alt']", 'property', 'og:image:alt', blog.imageAlt || blog.title);
     setMeta("meta[property='og:site_name']", 'property', 'og:site_name', 'DLEducationConnect');
+    setMeta("meta[property='og:updated_time']", 'property', 'og:updated_time', new Date(modifiedDate).toISOString());
     setMeta("meta[property='article:published_time']", 'property', 'article:published_time', new Date(publishDate).toISOString());
     setMeta("meta[property='article:modified_time']", 'property', 'article:modified_time', new Date(modifiedDate).toISOString());
     setMeta("meta[property='article:author']", 'property', 'article:author', authorName);
@@ -661,12 +663,36 @@ export default function BlogDetail() {
             <div style={styles.articleHeader}>
               <h1 className="blog-main-title" style={styles.postTitle}>{blog.title}</h1>
 
-              {/* Clean Byline: By Author / Date */}
-              <div className="blog-byline-row" style={styles.bylineRow}>
-                <span>By <span style={styles.bylineAuthor}>{blog.authorName || 'Aniket Kumar'}</span></span>
-                <span style={styles.bylineSlash}>/</span>
-                <span>{formatDate(blog.publishDate || blog.createdAt)}</span>
-              </div>
+              {/* Clean Byline: By Author / Published Date / Last Updated Date (Google & Public Freshness) */}
+              {(() => {
+                const pubDate = blog.publishDate || blog.createdAt;
+                const modDate = blog.updatedDate || blog.updatedAt || pubDate;
+                const pubTime = new Date(pubDate).getTime();
+                const modTime = new Date(modDate).getTime();
+                const isUpdated = Boolean(
+                  (blog.updatedDate && new Date(blog.updatedDate).toISOString().split('T')[0] !== new Date(pubDate).toISOString().split('T')[0]) ||
+                  (modTime - pubTime > 24 * 60 * 60 * 1000)
+                );
+
+                return (
+                  <div className="blog-byline-row" style={styles.bylineRow}>
+                    <span>By <span style={styles.bylineAuthor}>{blog.authorName || 'Aniket Kumar'}</span></span>
+                    <span style={styles.bylineSlash}>/</span>
+                    <span>
+                      Published: <time dateTime={new Date(pubDate).toISOString()} itemProp="datePublished">{formatDate(pubDate)}</time>
+                    </span>
+                    {isUpdated && (
+                      <>
+                        <span style={styles.bylineSlash}>•</span>
+                        <span style={styles.bylineUpdatedBadge}>
+                          <span style={{ fontSize: 13 }}>🔄</span>
+                          <span>Last Updated: <strong style={{ color: '#047857' }}><time dateTime={new Date(modDate).toISOString()} itemProp="dateModified">{formatDate(modDate)}</time></strong></span>
+                        </span>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Featured Hero Banner Image */}
@@ -860,6 +886,18 @@ const styles = {
   bylineSlash: {
     color: '#64748b',
     margin: '0 2px',
+  },
+  bylineUpdatedBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    background: '#ecfdf5',
+    color: '#065f46',
+    border: '1px solid #a7f3d0',
+    padding: '2px 8px',
+    borderRadius: 6,
+    fontSize: 12.5,
+    fontWeight: 600,
   },
   featuredImageWrap: {
     borderRadius: 8,

@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Navbar({ user, setUser }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const inputRef = useRef(null);
-  const searchContainerRef = useRef(null);
+  const searchWrapRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (isSearchOpen && inputRef.current) {
@@ -19,14 +19,12 @@ export default function Navbar({ user, setUser }) {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target)) {
         setIsSearchOpen(false);
       }
     };
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setIsSearchOpen(false);
-      }
+      if (e.key === 'Escape') setIsSearchOpen(false);
     };
     if (isSearchOpen) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -44,6 +42,7 @@ export default function Navbar({ user, setUser }) {
       navigate(`/blogs?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
       setIsSearchOpen(false);
+      setMenuOpen(false);
     }
   };
 
@@ -58,166 +57,220 @@ export default function Navbar({ user, setUser }) {
     navigate('/');
   };
 
+  const isHomeActive = location.pathname === '/';
+
   return (
-    <header style={styles.header}>
+    <header className="site-navbar" style={styles.header}>
       <div className="container" style={styles.inner}>
-        {/* Logo */}
-        <Link to="/" style={styles.logo}>
-          <img
-            src="/logo-512.png"
-            alt="DLEducationConnect Logo"
-            width={38}
-            height={38}
-            style={{ width: 38, height: 38, objectFit: 'contain' }}
-          />
-          <span style={styles.logoText}>DLEducation<span style={styles.logoAccent}>Connect</span></span>
+        {/* ── Brand Logo ──────────────────────────────── */}
+        <Link to="/" style={styles.brand} aria-label="DL Education Connect Home">
+          <div style={styles.logoBadge}>
+            <img
+              src="/logo-512.png"
+              alt="DL Education Connect Logo"
+              width={38}
+              height={38}
+              style={styles.logoImg}
+            />
+          </div>
+          <div style={styles.brandTextWrap}>
+            <span style={styles.brandMain}>DL EDUCATION</span>
+            <span style={styles.brandSub}>CONNECT</span>
+          </div>
         </Link>
 
-        {/* Collapsible Search: Icon-only button by default, expands on click */}
-        {!isSearchOpen ? (
-          <button
-            type="button"
-            className="nav-search-trigger"
-            style={styles.searchIconButton}
-            onClick={() => setIsSearchOpen(true)}
-            aria-label="Open search input"
-            title="Search"
+        {/* ── Desktop Navigation ──────────────────────── */}
+        <nav className="desktop-nav" style={styles.navMenu}>
+          {/* Home */}
+          <Link
+            to="/"
+            style={{
+              ...styles.navLink,
+              ...(isHomeActive ? styles.navLinkActive : {}),
+            }}
           >
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
-          </button>
-        ) : (
-          <form
-            ref={searchContainerRef}
-            className="nav-search-wrap nav-search-expanded"
-            style={styles.searchForm}
-            onSubmit={handleSearch}
-          >
-            <div
-              style={{
-                ...styles.searchWrap,
-                ...(isFocused ? styles.searchWrapFocused : {}),
-              }}
-            >
-              <div style={{ ...styles.searchIconLeft, color: isFocused ? 'var(--primary)' : '#94a3b8' }}>
-                <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-                </svg>
-              </div>
-              <input
-                ref={inputRef}
-                style={styles.searchInput}
-                type="text"
-                placeholder="Search universities, courses, blogs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  style={styles.searchClearBtn}
-                  aria-label="Clear search"
-                >
-                  ✕
-                </button>
-              )}
-              <button type="submit" style={styles.searchBtn} aria-label="Search">
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsSearchOpen(false)}
-                style={styles.searchCloseBtn}
-                aria-label="Close search"
-                title="Close"
-              >
-                ✕
-              </button>
-            </div>
-          </form>
-        )}
+            <span>Home</span>
+            {isHomeActive && <span style={styles.activeBar} />}
+          </Link>
 
-        {/* Nav Links */}
-        <nav className="desktop-nav" style={styles.nav}>
-          {[
-            { to: '/', label: 'Home' },
-            { to: '/blogs', label: 'Blogs' },
-          ].map(({ to, label }) => (
+          {/* Universities */}
+          <Link
+            to="/blogs?category=University"
+            style={{
+              ...styles.navLink,
+              ...(location.search.includes('University') ? styles.navLinkActive : {}),
+            }}
+          >
+            <span>Universities</span>
+            {location.search.includes('University') && <span style={styles.activeBar} />}
+          </Link>
+
+          {/* Courses */}
+          <Link
+            to="/blogs?category=Courses"
+            style={{
+              ...styles.navLink,
+              ...(location.search.includes('Courses') ? styles.navLinkActive : {}),
+            }}
+          >
+            <span>Courses</span>
+            {location.search.includes('Courses') && <span style={styles.activeBar} />}
+          </Link>
+
+          {/* Admission Guides */}
+          <Link
+            to="/blogs?category=Admission"
+            style={{
+              ...styles.navLink,
+              ...(location.search.includes('Admission') ? styles.navLinkActive : {}),
+            }}
+          >
+            <span>Admission Guides</span>
+            {location.search.includes('Admission') && <span style={styles.activeBar} />}
+          </Link>
+
+          {/* Blog */}
+          <Link
+            to="/blogs"
+            style={{
+              ...styles.navLink,
+              ...(location.pathname === '/blogs' && !location.search ? styles.navLinkActive : {}),
+            }}
+          >
+            <span>Blog</span>
+            {location.pathname === '/blogs' && !location.search && <span style={styles.activeBar} />}
+          </Link>
+
+          {/* About Us */}
+          <a href="#about" style={styles.navLink}>
+            <span>About Us</span>
+          </a>
+
+          {/* Admin link if logged in */}
+          {user?.role === 'admin' && (
             <NavLink
-              key={to}
-              to={to}
+              to="/admin"
               style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive ? styles.navLinkActive : {}),
+                ...styles.adminBadge,
+                ...(isActive ? styles.adminBadgeActive : {}),
               })}
             >
-              {label}
+              Dashboard
             </NavLink>
-          ))}
+          )}
 
           {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 6 }}>
-              {user.role === 'admin' && (
-                <NavLink
-                  to="/admin"
-                  style={({ isActive }) => ({
-                    ...styles.adminBtn,
-                    ...(isActive ? styles.adminBtnActive : {}),
-                  })}
-                >
-                  Dashboard
-                </NavLink>
-              )}
-              <button style={styles.logoutBtn} onClick={handleLogout}>Logout</button>
-            </div>
+            <button type="button" onClick={handleLogout} style={styles.logoutBtn}>
+              Logout
+            </button>
           )}
         </nav>
 
-        {/* Mobile hamburger */}
-        <button
-          type="button"
-          className="mobile-hamburger"
-          style={styles.hamburger}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-        >
-          {menuOpen ? (
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+        {/* ── Right Actions ───────────────────────────── */}
+        <div style={styles.rightActions}>
+          {/* Search Trigger */}
+          <div ref={searchWrapRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              style={styles.searchIconBtn}
+              onClick={() => setIsSearchOpen((prev) => !prev)}
+              aria-label="Toggle search input"
+              title="Search"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+
+            {/* Expandable Search Dropdown */}
+            {isSearchOpen && (
+              <form onSubmit={handleSearch} style={styles.searchDropdown}>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Search blogs, universities, courses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={styles.dropdownInput}
+                />
+                <button type="submit" style={styles.dropdownBtn}>
+                  Search
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Explore Courses Button */}
+          <Link to="/blogs?category=Courses" className="nav-explore-btn" style={styles.exploreBtn}>
+            <span>Explore Courses</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
-          ) : (
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          )}
-        </button>
+          </Link>
+
+          {/* Mobile Menu Hamburger */}
+          <button
+            type="button"
+            className="mobile-hamburger"
+            style={styles.hamburger}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? 'Close Menu' : 'Open Menu'}
+          >
+            {menuOpen ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* ── Mobile Dropdown Menu ─────────────────────── */}
       {menuOpen && (
         <div style={styles.mobileMenu}>
-          {[
-            { to: '/', label: 'Home' },
-            { to: '/blogs', label: 'Blogs' },
-          ].map(({ to, label }) => (
-            <NavLink key={to} to={to} style={styles.mobileLink} onClick={() => setMenuOpen(false)}>{label}</NavLink>
-          ))}
+          <Link to="/" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+            Home
+          </Link>
+          <Link to="/blogs?category=University" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+            Universities
+          </Link>
+          <Link to="/blogs?category=Courses" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+            Courses
+          </Link>
+          <Link to="/blogs?category=Admission" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+            Admission Guides
+          </Link>
+          <Link to="/blogs" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+            Blog
+          </Link>
+          <a href="#about" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+            About Us
+          </a>
+          <Link
+            to="/blogs?category=Courses"
+            style={{ ...styles.mobileLink, color: 'var(--primary)', fontWeight: 700 }}
+            onClick={() => setMenuOpen(false)}
+          >
+            Explore Courses →
+          </Link>
+          {user?.role === 'admin' && (
+            <Link to="/admin" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+              Admin Dashboard
+            </Link>
+          )}
           {user && (
-            <>
-              {user.role === 'admin' && (
-                <NavLink to="/admin" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>Admin Dashboard</NavLink>
-              )}
-              <button style={styles.mobileLinkBtn} onClick={handleLogout}>Logout</button>
-            </>
+            <button type="button" onClick={handleLogout} style={styles.mobileLogoutBtn}>
+              Logout
+            </button>
           )}
         </div>
       )}
@@ -227,228 +280,207 @@ export default function Navbar({ user, setUser }) {
 
 const styles = {
   header: {
-    position: 'sticky', top: 0, zIndex: 100,
-    background: 'rgba(255,255,255,0.98)',
-    backdropFilter: 'blur(12px)',
-    borderBottom: '1px solid var(--border)',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    background: '#ffffff',
+    borderBottom: '1px solid #f1f5f9',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+    transition: 'all 0.2s ease',
   },
   inner: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    height: 74,
+    gap: 16,
+  },
+  brand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    textDecoration: 'none',
+    flexShrink: 0,
+  },
+  logoBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImg: {
+    width: 38,
+    height: 38,
+    objectFit: 'contain',
+  },
+  brandTextWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    lineHeight: 1.15,
+  },
+  brandMain: {
+    fontSize: 15.5,
+    fontWeight: 800,
+    color: '#0e2a47',
+    letterSpacing: '0.4px',
+    fontFamily: 'var(--font)',
+  },
+  brandSub: {
+    fontSize: 10.5,
+    fontWeight: 700,
+    color: '#1d68e1',
+    letterSpacing: '2.5px',
+    fontFamily: 'var(--font)',
+  },
+  navMenu: {
+    display: 'flex',
+    alignItems: 'center',
     gap: 24,
-    height: 'var(--nav-height)',
+  },
+  navLink: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
     position: 'relative',
+    fontSize: 14,
+    fontWeight: 500,
+    color: '#334155',
+    textDecoration: 'none',
+    padding: '8px 2px',
+    transition: 'color 0.15s ease',
   },
-  logo: {
-    display: 'flex', alignItems: 'center', gap: 10,
-    textDecoration: 'none', flexShrink: 0,
+  navLinkActive: {
+    color: '#1d68e1',
+    fontWeight: 600,
   },
-  logoIcon: {
-    width: 36, height: 36,
-    background: 'linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%)',
-    borderRadius: 8,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+  activeBar: {
+    position: 'absolute',
+    bottom: -2,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 22,
+    height: 2.5,
+    borderRadius: 2,
+    backgroundColor: '#1d68e1',
   },
-  logoText: {
-    fontSize: 17, fontWeight: 700, color: 'var(--text)',
-    letterSpacing: '-0.3px',
+  adminBadge: {
+    fontSize: 12.5,
+    fontWeight: 600,
+    color: '#92400e',
+    background: '#fef3c7',
+    border: '1px solid #fde68a',
+    padding: '5px 12px',
+    borderRadius: 6,
+    textDecoration: 'none',
   },
-  logoAccent: { color: 'var(--primary)' },
-  searchIconButton: {
+  adminBadgeActive: {
+    background: '#fde68a',
+  },
+  logoutBtn: {
+    background: 'none',
+    border: '1px solid #fecaca',
+    color: '#dc2626',
+    borderRadius: 6,
+    padding: '5px 12px',
+    fontSize: 12.5,
+    fontWeight: 600,
+    cursor: 'pointer',
+  },
+  rightActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    flexShrink: 0,
+  },
+  searchIconBtn: {
     width: 38,
     height: 38,
     borderRadius: '50%',
-    background: '#f8fafc',
-    border: '1.5px solid #e2e8f0',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
     color: '#475569',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    flexShrink: 0,
-    outline: 'none',
   },
-  searchForm: {
-    flex: 1,
-    maxWidth: 460,
-    margin: '0 20px',
-  },
-  searchWrap: {
-    display: 'flex',
-    alignItems: 'center',
-    height: 42,
-    background: '#f8fafc',
-    border: '1.5px solid #e2e8f0',
-    borderRadius: 24,
-    padding: '3px 4px 3px 14px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-    transition: 'all 0.2s ease',
-  },
-  searchWrapFocused: {
+  searchDropdown: {
+    position: 'absolute',
+    top: 48,
+    right: 0,
     background: '#ffffff',
-    borderColor: 'var(--primary)',
-    boxShadow: '0 0 0 3px rgba(37, 99, 235, 0.12)',
-  },
-  searchIconLeft: {
+    border: '1px solid #e2e8f0',
+    borderRadius: 30,
+    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-    flexShrink: 0,
-    transition: 'color 0.2s ease',
+    padding: '4px 6px 4px 16px',
+    width: 320,
+    zIndex: 110,
   },
-  searchInput: {
+  dropdownInput: {
     flex: 1,
-    height: '100%',
-    padding: '0 6px',
     border: 'none',
-    fontSize: 13.5,
-    fontFamily: 'var(--font)',
-    background: 'transparent',
     outline: 'none',
-    color: 'var(--text)',
+    fontSize: 13.5,
+    color: '#0f172a',
+    background: 'transparent',
   },
-  searchClearBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#94a3b8',
-    fontSize: 12,
-    cursor: 'pointer',
-    padding: '0 6px',
-    marginRight: 4,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'color 0.15s ease',
-  },
-  searchBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: '50%',
-    background: 'var(--primary)',
-    border: 'none',
+  dropdownBtn: {
+    background: '#1d68e1',
     color: '#ffffff',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
-    transition: 'all 0.15s ease',
-  },
-  searchCloseBtn: {
-    background: 'none',
     border: 'none',
-    color: '#94a3b8',
-    fontSize: 14,
-    cursor: 'pointer',
-    padding: '0 8px 0 6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'color 0.15s ease',
-    flexShrink: 0,
-  },
-  userName: {
+    borderRadius: 20,
+    padding: '6px 14px',
     fontSize: 13,
     fontWeight: 600,
-    color: 'var(--text)',
+    cursor: 'pointer',
   },
-  nav: {
-    display: 'flex',
+  exploreBtn: {
+    display: 'inline-flex',
     alignItems: 'center',
     gap: 8,
-    flexShrink: 0,
-  },
-  navLink: {
-    padding: '7px 16px',
-    borderRadius: 8,
-    fontSize: 14,
-    fontWeight: 500,
-    color: 'var(--text-muted)',
-    textDecoration: 'none',
-    transition: 'all 0.15s ease',
-  },
-  navLinkActive: {
-    color: 'var(--primary)',
-    background: 'var(--primary-light)',
-    fontWeight: 600,
-  },
-  adminBtn: {
-    padding: '6px 14px',
-    borderRadius: 8,
-    fontSize: 13,
-    fontWeight: 600,
-    background: '#fef3c7',
-    color: '#92400e',
-    border: '1px solid #fde68a',
-    textDecoration: 'none',
-    transition: 'all 0.15s ease',
-  },
-  adminBtnActive: {
-    background: '#fde68a',
-  },
-  loginBtn: {
-    padding: '7px 18px',
-    borderRadius: 8,
+    background: '#1d68e1',
+    color: '#ffffff',
     fontSize: 13.5,
     fontWeight: 600,
-    background: 'var(--primary)',
-    color: 'white',
+    padding: '9px 18px',
+    borderRadius: 24,
     textDecoration: 'none',
-    transition: 'all 0.2s ease',
-    marginLeft: 6,
-    boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
-  },
-  logoutBtn: {
-    padding: '6px 14px',
-    borderRadius: 8,
-    fontSize: 13,
-    fontWeight: 600,
-    background: 'transparent',
-    color: 'var(--danger)',
-    border: '1.5px solid var(--danger)',
+    boxShadow: '0 2px 8px rgba(29, 104, 225, 0.25)',
     transition: 'all 0.2s ease',
   },
   hamburger: {
     display: 'none',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'transparent',
+    background: 'none',
     border: 'none',
-    padding: 6,
+    color: '#0f172a',
     cursor: 'pointer',
-    color: 'var(--text)',
-    flexShrink: 0,
+    padding: 6,
   },
   mobileMenu: {
     display: 'flex',
     flexDirection: 'column',
-    padding: '12px 20px 16px',
-    borderTop: '1px solid var(--border)',
-    background: 'var(--bg)',
+    padding: '14px 20px 20px',
+    borderTop: '1px solid #f1f5f9',
+    background: '#ffffff',
   },
   mobileLink: {
     padding: '10px 0',
     fontSize: 15,
     fontWeight: 500,
-    color: 'var(--text)',
+    color: '#0f172a',
     textDecoration: 'none',
-    borderBottom: '1px solid var(--border)',
+    borderBottom: '1px solid #f8fafc',
   },
-  mobileLinkBtn: {
-    marginTop: 10,
-    padding: '10px 0',
+  mobileLogoutBtn: {
     background: 'none',
     border: 'none',
-    fontSize: 15,
-    fontWeight: 500,
-    color: 'var(--danger)',
+    color: '#dc2626',
     textAlign: 'left',
+    padding: '10px 0',
+    fontSize: 15,
+    fontWeight: 600,
     cursor: 'pointer',
   },
 };

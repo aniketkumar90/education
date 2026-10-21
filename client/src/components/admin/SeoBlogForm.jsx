@@ -19,6 +19,7 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
     content: '',
     authorName: 'Aniket Kumar',
     publishDate: new Date().toISOString().split('T')[0],
+    updatedDate: new Date().toISOString().split('T')[0],
     status: 'Published',
   });
 
@@ -46,6 +47,11 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
         publishDate: blogToEdit.publishDate
           ? new Date(blogToEdit.publishDate).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
+        updatedDate: blogToEdit.updatedDate
+          ? new Date(blogToEdit.updatedDate).toISOString().split('T')[0]
+          : (blogToEdit.updatedAt
+            ? new Date(blogToEdit.updatedAt).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0]),
         status: blogToEdit.status || 'Published',
       });
 
@@ -144,6 +150,7 @@ export default function SeoBlogForm({ onSuccess, onCancel, categories = [], blog
       formData.append('content', form.content.trim());
       formData.append('authorName', form.authorName.trim() || 'Aniket Kumar');
       formData.append('publishDate', form.publishDate);
+      formData.append('updatedDate', form.updatedDate || new Date().toISOString().split('T')[0]);
       formData.append('status', targetStatus);
 
       if (coverImage) {

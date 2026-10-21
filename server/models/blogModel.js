@@ -82,6 +82,11 @@ const blogSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // 13b. Updated / Last Modified Date (Critical for Google SERP & SEO Freshness Signals)
+    updatedDate: {
+      type: Date,
+      default: Date.now,
+    },
     // 14. Status (Draft / Published)
     status: {
       type: String,
@@ -104,6 +109,11 @@ const blogSchema = new mongoose.Schema(
 blogSchema.pre('save', function () {
   // Sync published boolean with status
   this.published = this.status === 'Published';
+
+  // Ensure updatedDate is populated
+  if (!this.updatedDate) {
+    this.updatedDate = new Date();
+  }
 
   // Fallback defaults for meta if not explicitly provided
   if (!this.metaTitle) {

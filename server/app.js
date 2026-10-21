@@ -182,7 +182,29 @@ const getHtmlTemplate = () => {
 };
 
 // Helper: assemble complete HTML page replacing <div id="root"> and head metadata cleanly
-const buildHtmlPage = ({ template, title, description, canonicalUrl, ogType = 'website', ogImage, jsonLd, bodyContent }) => {
+const buildHtmlPage = ({
+  template,
+  title,
+  description,
+  canonicalUrl,
+  ogType = 'website',
+  ogImage,
+  jsonLd,
+  bodyContent,
+  articlePublishedTime,
+  articleModifiedTime,
+}) => {
+  const pubIso = articlePublishedTime ? new Date(articlePublishedTime).toISOString() : null;
+  const modIso = articleModifiedTime ? new Date(articleModifiedTime).toISOString() : null;
+
+  let extraArticleMetas = '';
+  if (pubIso) {
+    extraArticleMetas += `\n  <meta property="article:published_time" content="${pubIso}">`;
+  }
+  if (modIso) {
+    extraArticleMetas += `\n  <meta property="article:modified_time" content="${modIso}">\n  <meta property="og:updated_time" content="${modIso}">\n  <meta name="revised" content="${modIso}">`;
+  }
+
   let html = template;
   if (!html) {
     return `<!DOCTYPE html>
@@ -210,7 +232,7 @@ const buildHtmlPage = ({ template, title, description, canonicalUrl, ogType = 'w
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title.replace(/"/g, '&quot;')}">
   <meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}">
-  <meta name="twitter:image" content="${ogImage}">
+  <meta name="twitter:image" content="${ogImage}">${extraArticleMetas}
   ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
 </head>
 <body>
@@ -238,9 +260,16 @@ const buildHtmlPage = ({ template, title, description, canonicalUrl, ogType = 'w
   html = html.replace(/<meta\s+name=["']twitter:description["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta name="twitter:description" content="${description.replace(/"/g, '&quot;')}" />`);
   html = html.replace(/<meta\s+name=["']twitter:image["']\s+content=["'][^"']*?["']\s*\/?>/i, `<meta name="twitter:image" content="${ogImage}" />`);
 
-  // Inject JSON-LD Schema
+  // Inject extra article date metadata and JSON-LD Schema
+  let headInjections = '';
+  if (extraArticleMetas) {
+    headInjections += extraArticleMetas + '\n';
+  }
   if (jsonLd) {
-    html = html.replace('</head>', `  <script type="application/ld+json">${jsonLd}</script>\n</head>`);
+    headInjections += `  <script type="application/ld+json">${jsonLd}</script>\n`;
+  }
+  if (headInjections) {
+    html = html.replace('</head>', `${headInjections}</head>`);
   }
 
   // Replace existing <div id="root">...</div> completely (removes duplicate H1 and static placeholders)
@@ -304,6 +333,15 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
     const keywords = (blog.tags && blog.tags.length > 0) ? blog.tags.join(', ') : (blog.focusKeyword || 'distance education, university');
     const authorName = blog.authorName || blog.author?.name || 'Aniket Kumar';
 
+    const publishDate = blog.publishDate || blog.createdAt || new Date();
+    const effectiveModified = blog.updatedDate || blog.updatedAt || publishDate;
+    const pubIso = new Date(publishDate).toISOString();
+    const modIso = new Date(effectiveModified).toISOString();
+    const isUpdated = Boolean(
+      (blog.updatedDate && new Date(blog.updatedDate).toISOString().split('T')[0] !== new Date(publishDate).toISOString().split('T')[0]) ||
+      (new Date(effectiveModified).getTime() - new Date(publishDate).getTime() > 24 * 60 * 60 * 1000)
+    );
+
     const jsonLd = JSON.stringify({
       '@context': 'https://schema.org',
       '@graph': [
@@ -318,8 +356,8 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
             name: 'DLEducationConnect',
             logo: { '@type': 'ImageObject', url: `${siteUrl}/logo-512.png` },
           },
-          datePublished: new Date(blog.publishDate || blog.createdAt).toISOString(),
-          dateModified: new Date(blog.updatedAt || blog.createdAt).toISOString(),
+          datePublished: pubIso,
+          dateModified: modIso,
           mainEntityOfPage: { '@type': 'WebPage', '@id': blogUrl },
           url: blogUrl,
           keywords: keywords,
@@ -358,9 +396,9 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
         _id: { $ne: blog._id },
         $or: [{ status: 'Published' }, { published: true }],
       },
-      'title slug _id excerpt publishDate createdAt'
+      'title slug _id excerpt publishDate updatedDate updatedAt createdAt'
     )
-      .sort({ publishDate: -1, createdAt: -1 })
+      .sort({ updatedDate: -1, publishDate: -1, createdAt: -1 })
       .limit(6)
       .lean();
 
@@ -387,6 +425,9 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
     const cleanContent = (blog.content || '')
       .replace(/width:\s*([4-9]\d{2,}|[1-9]\d{3,})px;?/gi, 'max-width: 100%;');
 
+    const formattedPublish = new Date(publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const formattedModified = new Date(effectiveModified).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
     const preRenderedBody = `
       <article style="max-width:860px;margin:30px auto;padding:0 20px;">
         <nav style="font-size:14px;color:#64748b;margin-bottom:14px;">
@@ -395,7 +436,16 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
           <span>${blog.title}</span>
         </nav>
         <h1 style="font-size:32px;font-weight:800;color:#0f172a;line-height:1.3;margin:0 0 10px 0;text-align:left;">${blog.title}</h1>
-        <div style="font-size:14px;color:#64748b;margin-bottom:18px;">By <strong style="color:#0f172a;">${authorName}</strong> / ${new Date(blog.publishDate || blog.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+        <div style="font-size:14px;color:#64748b;margin-bottom:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span>By <strong style="color:#0f172a;">${authorName}</strong></span>
+          <span style="color:#94a3b8;">/</span>
+          <span>Published: <time datetime="${pubIso}" itemprop="datePublished">${formattedPublish}</time></span>
+          ${isUpdated ? `
+          <span style="color:#94a3b8;">&bull;</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;color:#16a34a;font-weight:700;">
+            <span>🔄</span> Last Updated: <time datetime="${modIso}" itemprop="dateModified">${formattedModified}</time>
+          </span>` : ''}
+        </div>
         <img src="${coverUrl}" alt="${blog.imageAlt || blog.title}" style="width:100%;max-height:480px;object-fit:cover;border-radius:8px;margin-bottom:24px;display:block;" />
         <div class="blog-rich-content rich-blog-body" style="font-size:16px;color:#334155;line-height:1.8;">
           ${cleanContent}
@@ -420,6 +470,7 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
       content: blog.content,
       authorName: authorName,
       publishDate: blog.publishDate,
+      updatedDate: blog.updatedDate || blog.updatedAt || blog.publishDate,
       createdAt: blog.createdAt,
       updatedAt: blog.updatedAt,
       status: blog.status,
@@ -436,6 +487,8 @@ app.get(['/blog/:slug', '/blogs/:slug'], ensureDbConnected, async (req, res, nex
       ogImage: coverUrl,
       jsonLd,
       bodyContent: preRenderedBody,
+      articlePublishedTime: pubIso,
+      articleModifiedTime: modIso,
     });
 
     // Inject sanitized window.__INITIAL_BLOG__ so client hydrates instantaneously without refetching
@@ -676,9 +729,9 @@ app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
     const Blog = require('./models/blogModel');
     const blogs = await Blog.find(
       { $or: [{ status: 'Published' }, { published: true }] },
-      'slug _id updatedAt createdAt title coverImage'
+      'slug _id updatedDate updatedAt createdAt publishDate title coverImage'
     )
-      .sort({ createdAt: -1, updatedAt: -1 })
+      .sort({ updatedDate: -1, updatedAt: -1, createdAt: -1 })
       .lean();
 
     const siteUrl = 'https://dleducationconnect.in';
@@ -693,12 +746,13 @@ app.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
       const rawCover = typeof b.coverImage === 'object' ? b.coverImage?.url : b.coverImage;
       const isExternalUrl = rawCover && (rawCover.startsWith('http://') || rawCover.startsWith('https://'));
       const coverUrl = isExternalUrl ? rawCover : `${siteUrl}/blog-cover/${b.slug || b._id}`;
+      const effectiveDate = b.updatedDate || b.updatedAt || b.publishDate || b.createdAt;
       return {
         url: `${siteUrl}/blog/${b.slug || b._id}`,
         priority: '0.8',
         changefreq: 'weekly',
-        lastmod: b.updatedAt
-          ? new Date(b.updatedAt).toISOString().split('T')[0]
+        lastmod: effectiveDate
+          ? new Date(effectiveDate).toISOString().split('T')[0]
           : today,
         imageUrl: coverUrl,
         title: (b.title || '').replace(/[<>&'"]/g, ''),

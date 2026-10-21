@@ -2,94 +2,144 @@ import { Link } from 'react-router-dom';
 import { getImageUrl } from '../api/api';
 
 const formatDate = (dateStr) => {
-  if (!dateStr) return 'September 10, 2026';
+  if (!dateStr) return 'Oct 5, 2026';
   const d = new Date(dateStr);
-  return isNaN(d.getTime())
-    ? dateStr
-    : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+// Map categories to screenshot badge styling
+const getCategoryStyle = (category = '') => {
+  const cat = category.toLowerCase();
+  if (cat.includes('distance')) {
+    return { bg: '#e0f2fe', color: '#0369a1', label: category || 'Distance Education' };
+  }
+  if (cat.includes('university')) {
+    return { bg: '#f3e8ff', color: '#7e22ce', label: category || 'University Guides' };
+  }
+  if (cat.includes('admission')) {
+    return { bg: '#fef3c7', color: '#b45309', label: category || 'Admission News' };
+  }
+  if (cat.includes('course') || cat.includes('online')) {
+    return { bg: '#dcfce7', color: '#15803d', label: category || 'Online Courses' };
+  }
+  if (cat.includes('career')) {
+    return { bg: '#ffe4e6', color: '#be123c', label: category || 'Career Guidance' };
+  }
+  if (cat.includes('study')) {
+    return { bg: '#e0f2fe', color: '#0284c7', label: category || 'Study Tips' };
+  }
+  return { bg: '#eff6ff', color: '#1d4ed8', label: category || 'Education' };
+};
+
+// Calculate estimate reading time
+const getReadTime = (blog) => {
+  if (blog.readTime) return blog.readTime;
+  const wordCount = (blog.content || '').replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
+  const minutes = Math.max(4, Math.ceil(wordCount / 200));
+  return `${minutes} min read`;
+};
+
+// Extract clean excerpt text
+const getExcerpt = (blog) => {
+  if (blog.excerpt && blog.excerpt.trim()) return blog.excerpt;
+  const clean = (blog.content || '').replace(/<[^>]*>/g, '').trim();
+  if (!clean) return 'Get expert tips and verified guidance on admission, eligibility criteria, and career scope.';
+  return clean.slice(0, 140) + (clean.length > 140 ? '...' : '');
 };
 
 export default function BlogCard({ blog, index = 0 }) {
-  const dateFormatted = formatDate(blog.publishDate || blog.createdAt);
-  
-  // Extract cover image URL safely using centralized resolver
-  const coverUrl = getImageUrl(blog.coverImage);
+  if (!blog) return null;
 
-  const bannerData = typeof blog.coverImage === 'object' && blog.coverImage ? blog.coverImage : {};
+  const pubDate = blog.publishDate || blog.createdAt;
+  const coverUrl = getImageUrl(blog.coverImage);
   const blogLink = `/blog/${blog.slug || blog._id}`;
+  const catStyle = getCategoryStyle(blog.category);
+  const readTime = getReadTime(blog);
+  const excerpt = getExcerpt(blog);
+  const dateFormatted = formatDate(pubDate);
 
   return (
-    <article
-      className="animate-fadeUp"
-      style={{ ...styles.card, animationDelay: `${index * 0.06}s` }}
-    >
-      {/* ── 1. Thumbnail Banner ─────────────────────────── */}
-      <Link to={blogLink} style={styles.thumbLink}>
-        <div style={styles.bannerWrap}>
-          {/* Background image */}
+    <article className="modern-blog-card" style={styles.card}>
+      {/* ── 1. Thumbnail Image ───────────────────────── */}
+      <Link to={blogLink} style={styles.imageLink} aria-label={blog.title}>
+        <div style={styles.imageWrap}>
           <img
             src={coverUrl}
             alt={blog.imageAlt || blog.title}
-            style={styles.bannerImg}
-            loading="lazy"
+            style={styles.cardImg}
+            loading={index < 3 ? 'eager' : 'lazy'}
           />
-
-          {/* Dark gradient overlay for text readability */}
-          <div style={styles.bannerOverlay} />
-
-          {/* Top-left branding badge */}
-          <div style={styles.brandBadge}>
-            <span style={styles.brandIcon}>🎓</span>
-            <span style={styles.brandText}>
-              {bannerData.tag && !bannerData.tag.toLowerCase().includes('iconnect')
-                ? bannerData.tag
-                : 'Education Connect'}
-            </span>
-          </div>
-
-          {/* Banner text overlay */}
-          <div style={styles.bannerContent}>
-            <div style={styles.bannerTitle}>
-              {bannerData.badgeTitle || (blog.title ? blog.title.split('|')[0] : '')}
-            </div>
-            {bannerData.subtitle && (
-              <div style={styles.bannerSub}>{bannerData.subtitle}</div>
-            )}
-            {bannerData.details && (
-              <div style={styles.bannerDetails}>{bannerData.details}</div>
-            )}
-            <div style={styles.applyBadge}>APPLY NOW 👉</div>
-          </div>
         </div>
       </Link>
 
-      {/* ── 2. Overlapping Circular Avatar ──────────────── */}
-      <div style={styles.avatarRow}>
-        <div style={styles.avatarCircle}>
-          {blog.author?.avatar ? (
-            <img src={blog.author.avatar} alt={blog.authorName || blog.author?.name} style={styles.avatarPhoto} />
-          ) : (
-            <svg viewBox="0 0 24 24" fill="#9ca3af" width="26" height="26">
-              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
-            </svg>
-          )}
+      {/* ── 2. Card Content Body ────────────────────── */}
+      <div style={styles.body}>
+        {/* Category Pill Tag */}
+        <div style={styles.categoryRow}>
+          <span
+            style={{
+              ...styles.catBadge,
+              backgroundColor: catStyle.bg,
+              color: catStyle.color,
+            }}
+          >
+            {catStyle.label}
+          </span>
         </div>
-      </div>
 
-      {/* ── 3. Blog Title ───────────────────────────────── */}
-      <div style={styles.titleWrap}>
-        <h3 style={styles.title}>
-          <Link to={blogLink} style={styles.titleLink}>
+        {/* Blog Title */}
+        <h3 style={styles.titleWrap}>
+          <Link to={blogLink} className="blog-title-link" style={styles.title}>
             {blog.title}
           </Link>
         </h3>
-      </div>
 
-      {/* ── 4. Bottom Meta: IT • Date in red/burgundy ───── */}
-      <div style={styles.metaRow}>
-        <span style={styles.catText}>{blog.category || 'IT'}</span>
-        <span style={styles.dot}>•</span>
-        <span style={styles.dateText}>{dateFormatted}</span>
+        {/* Excerpt */}
+        <p style={styles.excerpt}>{excerpt}</p>
+
+        {/* ── 3. Footer Meta Row ──────────────────────── */}
+        <div style={styles.footer}>
+          <div style={styles.metaLeft}>
+            {/* Calendar & Date */}
+            <span style={styles.metaItem}>
+              <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>{dateFormatted}</span>
+            </span>
+
+            {/* Clock & Read Time */}
+            <span style={styles.metaItem}>
+              <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>{readTime}</span>
+            </span>
+          </div>
+
+          {/* Blue Arrow on Right */}
+          <Link to={blogLink} style={styles.arrowLink} aria-label="Read article">
+            <svg
+              className="blog-card-arrow"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#1d68e1"
+              strokeWidth="2.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </Link>
+        </div>
       </div>
     </article>
   );
@@ -98,191 +148,104 @@ export default function BlogCard({ blog, index = 0 }) {
 const styles = {
   card: {
     background: '#ffffff',
-    borderRadius: 8,
-    overflow: 'visible',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+    border: '1px solid #e9edf3',
+    borderRadius: 14,
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    transition: 'transform 0.22s ease, box-shadow 0.22s ease',
-    position: 'relative',
+    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
+    transition: 'all 0.24s cubic-bezier(0.16, 1, 0.3, 1)',
     height: '100%',
   },
-
-  /* Thumbnail Banner */
-  thumbLink: {
+  imageLink: {
     display: 'block',
     textDecoration: 'none',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
     overflow: 'hidden',
   },
-  bannerWrap: {
-    position: 'relative',
+  imageWrap: {
+    width: '100%',
     height: 195,
     overflow: 'hidden',
-    background: '#1e293b',
+    backgroundColor: '#f1f5f9',
+    position: 'relative',
   },
-  bannerImg: {
+  cardImg: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
     display: 'block',
-    filter: 'brightness(0.92)',
     transition: 'transform 0.4s ease',
   },
-  bannerOverlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'linear-gradient(180deg, rgba(15,23,42,0.45) 0%, rgba(15,23,42,0.78) 100%)',
-    zIndex: 1,
+  body: {
+    padding: '18px 20px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
   },
-  brandBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    zIndex: 2,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 4,
-    background: 'rgba(255, 255, 255, 0.95)',
-    padding: '2px 8px',
-    borderRadius: 4,
-    fontSize: 10,
-    fontWeight: 700,
-    color: '#1e293b',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+  categoryRow: {
+    marginBottom: 10,
   },
-  brandIcon: {
-    fontSize: 11,
-  },
-  brandText: {
+  catBadge: {
+    display: 'inline-block',
+    padding: '3.5px 11px',
+    borderRadius: 16,
+    fontSize: 11.5,
+    fontWeight: 600,
     letterSpacing: '0.2px',
+    lineHeight: 1.3,
   },
-  bannerContent: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: 12,
-    zIndex: 2,
-    color: '#ffffff',
+  titleWrap: {
+    margin: '0 0 8px 0',
   },
-  bannerTitle: {
-    fontSize: 13,
-    fontWeight: 800,
-    lineHeight: 1.25,
-    color: '#ffffff',
-    textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+  title: {
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#0e233d',
+    lineHeight: 1.38,
+    textDecoration: 'none',
     display: '-webkit-box',
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
-    wordBreak: 'break-word',
-    overflowWrap: 'break-word',
+    transition: 'color 0.15s ease',
   },
-  bannerSub: {
-    fontSize: 10.5,
-    fontWeight: 600,
-    color: '#38bdf8',
-    marginTop: 2,
-    textShadow: '0 1px 2px rgba(0,0,0,0.7)',
+  excerpt: {
+    fontSize: 13.5,
+    lineHeight: 1.55,
+    color: '#64748b',
+    margin: '0 0 16px 0',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    flex: 1,
   },
-  bannerDetails: {
-    fontSize: 9.5,
-    color: '#cbd5e1',
-    marginTop: 2,
-    textShadow: '0 1px 2px rgba(0,0,0,0.7)',
+  footer: {
+    marginTop: 'auto',
+    paddingTop: 12,
+    borderTop: '1px solid #f1f5f9',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  applyBadge: {
-    display: 'inline-block',
-    marginTop: 6,
-    background: '#dc2626',
-    color: '#ffffff',
-    fontSize: 9,
-    fontWeight: 800,
-    padding: '2px 6px',
-    borderRadius: 3,
-    letterSpacing: '0.4px',
-    textTransform: 'uppercase',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+  metaLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
   },
-
-  /* Overlapping Avatar */
-  avatarRow: {
-    position: 'relative',
-    paddingLeft: 16,
-    marginTop: -20,
-    zIndex: 3,
+  metaItem: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    fontSize: 12,
+    color: '#64748b',
+    fontWeight: 500,
   },
-  avatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: '50%',
-    background: '#ffffff',
-    border: '2px solid #ffffff',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.16)',
+  arrowLink: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    backgroundColor: '#f1f5f9',
-  },
-  avatarPhoto: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-
-  /* Title area */
-  titleWrap: {
-    padding: '10px 16px 14px',
-    flex: 1,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: 700,
-    lineHeight: 1.42,
-    color: '#111827',
-    margin: 0,
-    wordBreak: 'break-word',
-    overflowWrap: 'break-word',
-  },
-  titleLink: {
-    color: '#111827',
     textDecoration: 'none',
-    display: '-webkit-box',
-    WebkitLineClamp: 3,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden',
-    wordBreak: 'break-word',
-    overflowWrap: 'break-word',
-    transition: 'color 0.15s ease',
-  },
-
-  /* Meta line at bottom: IT • September 10, 2026 */
-  metaRow: {
-    borderTop: '1px solid #f1f5f9',
-    padding: '9px 16px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 'auto',
-  },
-  catText: {
-    color: '#b91c1c',
-    fontSize: 11.5,
-    fontWeight: 700,
-    letterSpacing: '0.2px',
-    textTransform: 'uppercase',
-  },
-  dot: {
-    color: '#b91c1c',
-    fontSize: 11,
-    margin: '0 1px',
-  },
-  dateText: {
-    color: '#b91c1c',
-    fontSize: 11.5,
-    fontWeight: 500,
+    transition: 'transform 0.2s ease',
   },
 };

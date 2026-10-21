@@ -51,7 +51,21 @@ export default function SidebarSettingsSection({
 
           {/* Published Date */}
           <div style={styles.field}>
-            <label style={styles.label}>Published date</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <label style={styles.label}>Published date</label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof onChange === 'function') {
+                    onChange({ target: { name: 'publishDate', value: new Date().toISOString().split('T')[0] } });
+                  }
+                }}
+                style={styles.quickTodayBtn}
+                title="Set publish date to today"
+              >
+                📅 Today
+              </button>
+            </div>
             <input
               type="date"
               name="publishDate"
@@ -59,6 +73,40 @@ export default function SidebarSettingsSection({
               onChange={onChange}
               style={styles.input}
             />
+          </div>
+
+          {/* Last Updated Date (Google SERP & Freshness) */}
+          <div style={styles.field}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <label style={{ ...styles.label, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span>Last updated date</span>
+                <span style={{ fontSize: 10, background: '#dcfce7', color: '#166534', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>
+                  Google SERP
+                </span>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof onChange === 'function') {
+                    onChange({ target: { name: 'updatedDate', value: new Date().toISOString().split('T')[0] } });
+                  }
+                }}
+                style={{ ...styles.quickTodayBtn, color: '#16a34a', borderColor: '#86efac', background: '#f0fdf4' }}
+                title="Set update date to today"
+              >
+                ⚡ Set Today
+              </button>
+            </div>
+            <input
+              type="date"
+              name="updatedDate"
+              value={form.updatedDate || ''}
+              onChange={onChange}
+              style={styles.input}
+            />
+            <span style={{ fontSize: 11, color: '#64748b', marginTop: 4, display: 'block' }}>
+              Google Search aur visitors ko SERP par ye updated date dikhegi.
+            </span>
           </div>
 
           {/* Post Status */}
@@ -350,5 +398,15 @@ const styles = {
     cursor: 'pointer',
     padding: '0',
     textAlign: 'left',
+  },
+  quickTodayBtn: {
+    background: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    borderRadius: 4,
+    padding: '2px 7px',
+    fontSize: 11,
+    fontWeight: 600,
+    color: '#2563eb',
+    cursor: 'pointer',
   },
 };

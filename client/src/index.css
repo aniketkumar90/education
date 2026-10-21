@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Merriweather:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Merriweather:wght@700;900&display=swap');
 
 :root {
   --primary: #2563eb;
@@ -1409,6 +1409,94 @@ img {
   .admin-locked-form {
     flex-direction: column !important;
     align-items: stretch !important;
+  }
+}
+
+/* ── Modern Homepage UI & Animations ────────────────── */
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(29, 104, 225, 0.08);
+  border-color: #bfdbfe !important;
+}
+
+.category-card:hover .category-arrow svg {
+  stroke: #1d68e1 !important;
+  transform: translateX(4px);
+}
+
+.modern-blog-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.09) !important;
+  border-color: #cbd5e1 !important;
+}
+
+.modern-blog-card:hover .cardImg {
+  transform: scale(1.04);
+}
+
+.modern-blog-card:hover .blog-title-link {
+  color: #1d68e1 !important;
+}
+
+.modern-blog-card:hover .blog-card-arrow {
+  transform: translateX(4px);
+}
+
+.view-all-link:hover {
+  transform: translateX(4px);
+}
+
+.nav-explore-btn:hover {
+  background: #175ec9 !important;
+  box-shadow: 0 4px 14px rgba(29, 104, 225, 0.38) !important;
+  transform: translateY(-1px);
+}
+
+/* ── Responsive Layouts ─────────────────────────────── */
+@media (max-width: 1024px) {
+  .categories-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-hamburger {
+    display: flex !important;
+  }
+  .hero-section .container {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+    text-align: left;
+  }
+  .hero-handwritten-note {
+    left: 10px !important;
+    top: -24px !important;
+  }
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .site-footer .container > div:first-child {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 32px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .categories-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .site-footer .container > div:first-child {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+  .hero-handwritten-note {
+    display: none !important;
+  }
+  .nav-explore-btn {
+    display: none !important;
   }
 }
 
