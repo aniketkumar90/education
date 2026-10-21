@@ -32,14 +32,6 @@ const getCategoryStyle = (category = '') => {
   return { bg: '#eff6ff', color: '#1d4ed8', label: category || 'Education' };
 };
 
-// Calculate estimate reading time
-const getReadTime = (blog) => {
-  if (blog.readTime) return blog.readTime;
-  const wordCount = (blog.content || '').replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
-  const minutes = Math.max(4, Math.ceil(wordCount / 200));
-  return `${minutes} min read`;
-};
-
 // Extract clean excerpt text
 const getExcerpt = (blog) => {
   if (blog.excerpt && blog.excerpt.trim()) return blog.excerpt;
@@ -55,7 +47,6 @@ export default function BlogCard({ blog, index = 0 }) {
   const coverUrl = getImageUrl(blog.coverImage);
   const blogLink = `/blog/${blog.slug || blog._id}`;
   const catStyle = getCategoryStyle(blog.category);
-  const readTime = getReadTime(blog);
   const excerpt = getExcerpt(blog);
   const dateFormatted = formatDate(pubDate);
 
@@ -110,15 +101,6 @@ export default function BlogCard({ blog, index = 0 }) {
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
               <span>{dateFormatted}</span>
-            </span>
-
-            {/* Clock & Read Time */}
-            <span style={styles.metaItem}>
-              <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              <span>{readTime}</span>
             </span>
           </div>
 
