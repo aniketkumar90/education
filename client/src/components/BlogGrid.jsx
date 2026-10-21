@@ -12,13 +12,25 @@ export default function BlogGrid() {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const search = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || '';
 
   useEffect(() => {
-    if (categoryParam) setActiveCategory(categoryParam);
+    if (categoryParam) {
+      setActiveCategory(categoryParam);
+      setPage(1);
+      setTimeout(() => {
+        const el = document.getElementById('articles-grid');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      setActiveCategory('All');
+      setPage(1);
+    }
   }, [categoryParam]);
 
   useEffect(() => {
@@ -58,10 +70,17 @@ export default function BlogGrid() {
   const handleCategory = (cat) => {
     setActiveCategory(cat);
     setPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    if (cat === 'All') {
+      nextParams.delete('category');
+    } else {
+      nextParams.set('category', cat);
+    }
+    setSearchParams(nextParams);
   };
 
   return (
-    <section style={styles.section}>
+    <section id="articles-grid" style={styles.section}>
       {/* Category filter tabs */}
       <div style={styles.filterRow}>
         <div style={styles.filterScroll}>

@@ -10,6 +10,19 @@ import Login from './pages/Login';
 import Admin from './pages/Admin';
 import ErrorBoundary from './components/ErrorBoundary';
 
+function ScrollToTop() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // If not navigating with an explicit category on home page, scroll to top
+    if (!location.search.includes('category')) {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
+
+  return null;
+}
+
 // Sub-component to manage whether Navbar/Footer should show on Admin page if desired
 function AppContent({ user, setUser, authLoading }) {
   const location = useLocation();
@@ -17,6 +30,7 @@ function AppContent({ user, setUser, authLoading }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <ScrollToTop />
       {!isAdminRoute && <Navbar user={user} setUser={setUser} />}
       <div style={{ flex: 1 }}>
         <Routes>

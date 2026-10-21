@@ -57,6 +57,17 @@ export default function Navbar({ user, setUser }) {
     navigate('/');
   };
 
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    setMenuOpen(false);
+    if (location.pathname === '/' && !location.search) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const isHomeActive = location.pathname === '/';
 
   return (
@@ -64,7 +75,7 @@ export default function Navbar({ user, setUser }) {
       <header className="site-navbar" style={styles.header}>
       <div className="container" style={styles.inner}>
         {/* ── Brand Logo ──────────────────────────────── */}
-        <Link to="/" style={styles.brand} aria-label="Distance Education">
+        <Link to="/" onClick={handleLogoClick} style={styles.brand} aria-label="Distance Education">
           <img
             src="/images/distance-education-logo-transparent.png"
             alt="Distance Education"
@@ -77,18 +88,24 @@ export default function Navbar({ user, setUser }) {
           {/* Home */}
           <Link
             to="/"
+            onClick={(e) => {
+              if (location.pathname === '/' && !location.search) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             style={{
               ...styles.navLink,
-              ...(isHomeActive ? styles.navLinkActive : {}),
+              ...(isHomeActive && !location.search.includes('category') ? styles.navLinkActive : {}),
             }}
           >
             <span>Home</span>
-            {isHomeActive && <span style={styles.activeBar} />}
+            {isHomeActive && !location.search.includes('category') && <span style={styles.activeBar} />}
           </Link>
 
           {/* Universities */}
           <Link
-            to="/blogs?category=University"
+            to="/?category=University"
             style={{
               ...styles.navLink,
               ...(location.search.includes('University') ? styles.navLinkActive : {}),
@@ -100,7 +117,7 @@ export default function Navbar({ user, setUser }) {
 
           {/* Courses */}
           <Link
-            to="/blogs?category=Courses"
+            to="/?category=Courses"
             style={{
               ...styles.navLink,
               ...(location.search.includes('Courses') ? styles.navLinkActive : {}),
@@ -178,7 +195,7 @@ export default function Navbar({ user, setUser }) {
           </div>
 
           {/* Explore Courses Button */}
-          <Link to="/blogs?category=Courses" className="nav-explore-btn" style={styles.exploreBtn}>
+          <Link to="/?category=Courses" className="nav-explore-btn" style={styles.exploreBtn}>
             <span>Explore Courses</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -213,20 +230,27 @@ export default function Navbar({ user, setUser }) {
       {/* ── Mobile Dropdown Menu ─────────────────────── */}
       {menuOpen && (
         <div style={styles.mobileMenu}>
-          <Link to="/" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+          <Link
+            to="/"
+            style={styles.mobileLink}
+            onClick={() => {
+              setMenuOpen(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
             Home
           </Link>
-          <Link to="/blogs?category=University" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+          <Link to="/?category=University" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
             Universities
           </Link>
-          <Link to="/blogs?category=Courses" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+          <Link to="/?category=Courses" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
             Courses
           </Link>
           <Link to="/blogs" style={styles.mobileLink} onClick={() => setMenuOpen(false)}>
             Blog
           </Link>
           <Link
-            to="/blogs?category=Courses"
+            to="/?category=Courses"
             style={{ ...styles.mobileLink, color: '#bc8f8f', fontWeight: 700 }}
             onClick={() => setMenuOpen(false)}
           >
