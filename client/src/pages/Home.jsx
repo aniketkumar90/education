@@ -184,7 +184,7 @@ const styles = {
     width: 32,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#1d68e1',
+    backgroundColor: '#bc8f8f',
     marginBottom: 10,
   },
   sectionTitle: {
@@ -200,7 +200,7 @@ const styles = {
     lineHeight: 1.5,
   },
   filterNotice: {
-    color: '#1d68e1',
+    color: '#bc8f8f',
   },
   clearFilterBtn: {
     background: 'none',
@@ -217,7 +217,7 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    color: '#1d68e1',
+    color: '#bc8f8f',
     fontWeight: 700,
     fontSize: 14.5,
     textDecoration: 'none',
@@ -242,7 +242,7 @@ const styles = {
     border: '1px solid #e2e8f0',
   },
   showAllBtn: {
-    background: '#1d68e1',
+    background: '#bc8f8f',
     color: '#ffffff',
     border: 'none',
     borderRadius: 8,

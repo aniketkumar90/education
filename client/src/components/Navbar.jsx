@@ -234,7 +234,7 @@ export default function Navbar({ user, setUser }) {
           </Link>
           <Link
             to="/blogs?category=Courses"
-            style={{ ...styles.mobileLink, color: 'var(--primary)', fontWeight: 700 }}
+            style={{ ...styles.mobileLink, color: '#bc8f8f', fontWeight: 700 }}
             onClick={() => setMenuOpen(false)}
           >
             Explore Courses →
@@ -304,7 +304,7 @@ const styles = {
   brandSub: {
     fontSize: 10.5,
     fontWeight: 700,
-    color: '#1d68e1',
+    color: '#bc8f8f',
     letterSpacing: '2.5px',
     fontFamily: 'var(--font)',
   },
@@ -326,7 +326,7 @@ const styles = {
     transition: 'color 0.15s ease',
   },
   navLinkActive: {
-    color: '#1d68e1',
+    color: '#bc8f8f',
     fontWeight: 600,
   },
   activeBar: {
@@ -337,7 +337,7 @@ const styles = {
     width: 22,
     height: 2.5,
     borderRadius: 2,
-    backgroundColor: '#1d68e1',
+    backgroundColor: '#bc8f8f',
   },
   adminBadge: {
     fontSize: 12.5,
@@ -404,7 +404,7 @@ const styles = {
     background: 'transparent',
   },
   dropdownBtn: {
-    background: '#1d68e1',
+    background: '#bc8f8f',
     color: '#ffffff',
     border: 'none',
     borderRadius: 20,
@@ -417,14 +417,14 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 8,
-    background: '#1d68e1',
+    background: '#bc8f8f',
     color: '#ffffff',
     fontSize: 13.5,
     fontWeight: 600,
     padding: '9px 18px',
     borderRadius: 24,
     textDecoration: 'none',
-    boxShadow: '0 2px 8px rgba(29, 104, 225, 0.25)',
+    boxShadow: '0 2px 8px rgba(188, 143, 143, 0.35)',
     transition: 'all 0.2s ease',
   },
   hamburger: {

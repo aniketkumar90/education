@@ -122,7 +122,7 @@ export default function BlogCard({ blog, index = 0 }) {
             </span>
           </div>
 
-          {/* Blue Arrow on Right */}
+          {/* Arrow on Right */}
           <Link to={blogLink} style={styles.arrowLink} aria-label="Read article">
             <svg
               className="blog-card-arrow"
@@ -130,7 +130,7 @@ export default function BlogCard({ blog, index = 0 }) {
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#1d68e1"
+              stroke="#bc8f8f"
               strokeWidth="2.3"
               strokeLinecap="round"
               strokeLinejoin="round"

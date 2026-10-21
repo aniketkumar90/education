@@ -204,10 +204,10 @@ const styles = {
     fontFamily: 'inherit',
   },
   filterBtnActive: {
-    background: '#2563eb',
+    background: '#bc8f8f',
     color: '#ffffff',
-    borderColor: '#2563eb',
-    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+    borderColor: '#bc8f8f',
+    boxShadow: '0 2px 8px rgba(188, 143, 143, 0.35)',
     fontWeight: 600,
   },
   searchNote: {
@@ -266,8 +266,8 @@ const styles = {
     transition: 'all 0.15s',
   },
   pageBtnActive: {
-    background: '#2563eb',
+    background: '#bc8f8f',
     color: '#ffffff',
-    borderColor: '#2563eb',
+    borderColor: '#bc8f8f',
   },
 };

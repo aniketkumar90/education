@@ -24,7 +24,7 @@ export default function Hero() {
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#1d68e1"
+              stroke="#bc8f8f"
               strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -134,15 +134,15 @@ const styles = {
   badge: {
     display: 'inline-flex',
     alignItems: 'center',
-    background: '#ebf3fe',
-    border: '1px solid #d6e6fc',
-    color: '#1d68e1',
+    background: '#fdf7f7',
+    border: '1px solid #edd3d3',
+    color: '#9e6969',
     borderRadius: 20,
     padding: '6px 14px',
     fontSize: 13,
     fontWeight: 600,
     marginBottom: 20,
-    boxShadow: '0 1px 3px rgba(29, 104, 225, 0.08)',
+    boxShadow: '0 1px 3px rgba(188, 143, 143, 0.15)',
   },
   headline: {
     fontFamily: 'var(--font)',
@@ -187,7 +187,7 @@ const styles = {
     background: 'transparent',
   },
   searchBtn: {
-    background: '#1d68e1',
+    background: '#bc8f8f',
     color: '#ffffff',
     border: 'none',
     borderRadius: 9999,
@@ -196,7 +196,7 @@ const styles = {
     fontWeight: 600,
     cursor: 'pointer',
     flexShrink: 0,
-    boxShadow: '0 2px 8px rgba(29, 104, 225, 0.28)',
+    boxShadow: '0 2px 8px rgba(188, 143, 143, 0.35)',
     transition: 'all 0.2s ease',
   },
   handwrittenWrap: {

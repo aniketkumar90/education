@@ -1090,13 +1090,13 @@ const styles = {
   // Exact Application Form Widget Styles matching Home page Sidebar
   appCard: {
     background: '#ffffff',
-    border: '1.5px solid #253396',
+    border: '1.5px solid #bc8f8f',
     borderRadius: 8,
     overflow: 'hidden',
-    boxShadow: '0 8px 24px rgba(37, 51, 150, 0.12)',
+    boxShadow: '0 8px 24px rgba(188, 143, 143, 0.15)',
   },
   appHeader: {
-    background: '#253396',
+    background: 'linear-gradient(135deg, #bc8f8f 0%, #9e6969 100%)',
     padding: '16px 18px',
     textAlign: 'center',
     color: '#ffffff',
@@ -1110,7 +1110,7 @@ const styles = {
   },
   appSubtitle: {
     fontSize: 12,
-    color: '#dbeafe',
+    color: '#faefef',
     margin: '6px 0 0 0',
     fontWeight: 500,
     letterSpacing: 0.4,
@@ -1194,7 +1194,7 @@ const styles = {
     width: '100%',
     height: 44,
     marginTop: 4,
-    background: '#253396',
+    background: '#bc8f8f',
     color: '#ffffff',
     border: 'none',
     borderRadius: 6,
@@ -1202,13 +1202,13 @@ const styles = {
     fontWeight: 600,
     letterSpacing: 0.5,
     cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(37, 51, 150, 0.3)',
+    boxShadow: '0 4px 14px rgba(188, 143, 143, 0.35)',
     transition: 'background 0.2s, transform 0.1s',
   },
   appFooterAccent: {
     height: 24,
-    background: '#253396',
-    borderTop: '1px solid rgba(255,255,255,0.15)',
+    background: '#fdf7f7',
+    borderTop: '1px solid #edd3d3',
   },
   appSuccess: {
     padding: '24px 16px',
@@ -1218,7 +1218,7 @@ const styles = {
     border: '1px solid #bbf7d0',
   },
   newAppBtn: {
-    background: '#253396',
+    background: '#bc8f8f',
     color: '#ffffff',
     border: 'none',
     padding: '8px 18px',

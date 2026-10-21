@@ -185,7 +185,7 @@ const styles = {
   brandSub: {
     fontSize: 10,
     fontWeight: 700,
-    color: '#38bdf8',
+    color: '#bc8f8f',
     letterSpacing: '2.5px',
   },
   tagline: {
@@ -244,7 +244,7 @@ const styles = {
     width: 32,
     height: 32,
     borderRadius: '50%',
-    background: '#1d68e1',
+    background: '#bc8f8f',
     border: 'none',
     color: '#ffffff',
     cursor: 'pointer',
