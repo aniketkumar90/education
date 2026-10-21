@@ -64,13 +64,11 @@ export default function Navbar({ user, setUser }) {
       <div className="container" style={styles.inner}>
         {/* ── Brand Logo ──────────────────────────────── */}
         <Link to="/" style={styles.brand} aria-label="Distance Education">
-          <div style={styles.logoBadge}>
-            <img
-              src="/images/distance-education-logo-clean.png"
-              alt="Distance Education"
-              style={styles.logoImg}
-            />
-          </div>
+          <img
+            src="/images/distance-education-logo-transparent.png"
+            alt="Distance Education"
+            style={styles.logoImg}
+          />
         </Link>
 
         {/* ── Desktop Navigation ──────────────────────── */}
@@ -271,20 +269,10 @@ const styles = {
     alignItems: 'center',
     textDecoration: 'none',
     flexShrink: 0,
-  },
-  logoBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#ffffff',
-    border: '1.5px solid #0f172a',
-    borderRadius: 4,
-    padding: '2px 4px',
-    boxShadow: '0 2px 6px rgba(15, 23, 42, 0.08)',
-    transition: 'transform 0.15s ease',
+    transition: 'opacity 0.15s ease',
   },
   logoImg: {
-    height: 40,
+    height: 44,
     width: 'auto',
     objectFit: 'contain',
     display: 'block',
