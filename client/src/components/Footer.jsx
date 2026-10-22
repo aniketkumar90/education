@@ -131,6 +131,36 @@ export default function Footer() {
             </svg>
           </button>
         </div>
+
+        {/* ── Divider ── */}
+        <div style={styles.bottomDivider} />
+
+        {/* ── Short Educational Disclaimer (Small Font) ── */}
+        <div style={styles.disclaimerContainer}>
+          <p style={styles.disclaimerText}>
+            <span style={styles.disclaimerTag}>Disclaimer:</span> We run an educational blog for informational guidance and do not claim 100% official accuracy. For verified and official details, please check the respective university&apos;s official website.
+          </p>
+        </div>
+
+        {/* ── Bottom Bar: Copyright & Privacy Policy ── */}
+        <div style={styles.bottomBar}>
+          <p style={styles.copyrightText}>
+            © {new Date().getFullYear()} DL Education Connect. All rights reserved.
+          </p>
+          <div style={styles.legalLinks}>
+            <Link to="/privacy-policy" style={styles.legalLink}>
+              Privacy Policy
+            </Link>
+            <span style={styles.legalSeparator}>•</span>
+            <Link to="/privacy-policy#disclaimer" style={styles.legalLink}>
+              Disclaimer
+            </Link>
+            <span style={styles.legalSeparator}>•</span>
+            <Link to="/privacy-policy#terms" style={styles.legalLink}>
+              Terms
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Floating Scroll to Top button when user scrolls down */}
@@ -329,5 +359,60 @@ const styles = {
     cursor: 'pointer',
     boxShadow: '0 4px 18px rgba(188, 143, 143, 0.45)',
     transition: 'all 0.25s ease',
+  },
+  bottomDivider: {
+    height: 1,
+    background: 'rgba(255, 255, 255, 0.08)',
+    marginTop: 20,
+    marginBottom: 14,
+    width: '100%',
+  },
+  disclaimerContainer: {
+    padding: '8px 14px',
+    background: 'rgba(255, 255, 255, 0.025)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: 6,
+    marginBottom: 12,
+  },
+  disclaimerText: {
+    fontSize: 11,
+    lineHeight: 1.5,
+    color: '#94a3b8',
+    margin: 0,
+    textAlign: 'center',
+  },
+  disclaimerTag: {
+    color: '#cbd5e1',
+    fontWeight: 700,
+    marginRight: 5,
+  },
+  bottomBar: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 10,
+    paddingTop: 2,
+  },
+  copyrightText: {
+    fontSize: 11.5,
+    color: '#64748b',
+    margin: 0,
+  },
+  legalLinks: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  legalLink: {
+    fontSize: 11.5,
+    color: '#94a3b8',
+    textDecoration: 'none',
+    transition: 'color 0.15s ease',
+  },
+  legalSeparator: {
+    color: '#475569',
+    fontSize: 10,
   },
 };

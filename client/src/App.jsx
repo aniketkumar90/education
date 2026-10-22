@@ -8,6 +8,7 @@ import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function ScrollToTop() {
@@ -38,6 +39,7 @@ function AppContent({ user, setUser, authLoading }) {
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/blogs/:id" element={<BlogDetail />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/login" element={<Login user={user} setUser={setUser} />} />
           <Route
             path="/admin"
