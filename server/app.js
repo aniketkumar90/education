@@ -212,6 +212,7 @@ const buildHtmlPage = ({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-site-verification" content="FxdnSpTmAcz2fBTHoVavxJS80rq3u9HEpUrHMHerr4Q">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-RHXY1C7TF8"></script>
   <script>
